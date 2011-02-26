@@ -176,6 +176,7 @@ public class CommonUtils {
             final String data = IOUtils.toString(is);
             LOG.info("Completed native call: '{}'\nResponse: '"+data+"'", 
                 Arrays.asList(commands));
+            /*
             final int ev = process.exitValue();
             if (ev != 0) {
                 final String msg = "Process not completed normally! " + 
@@ -185,6 +186,7 @@ public class CommonUtils {
             } else {
                 LOG.info("Process completed normally!");
             }
+            */
             return data;
         } catch (final IOException e) {
             LOG.error("Error running commands: " + Arrays.asList(commands), e);
