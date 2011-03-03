@@ -21,6 +21,36 @@ public final class ByteBufferUtils {
             .getLogger(ByteBufferUtils.class);
 
     /**
+     * Splits the specified byte array into an array of {@link ByteBuffer}s,
+     * each with the specified maximum size. This is useful, for example,
+     * when trying to limit sizes to a network MTU.
+     * 
+     * @param byteArray The array to segment.
+     * @param sizeLimit The maximum size of each byte buffer.
+     * @return The new array of {@link ByteBuffer}s.
+     */
+    public static ByteBuffer[] toArray(final byte[] byteArray, 
+            final int sizeLimit) {
+        final int numBufs = 
+            (int) Math.ceil((double)byteArray.length / (double)sizeLimit);
+        final ByteBuffer[] bufs = new ByteBuffer[numBufs];
+        
+        int byteIndex = 0;
+        for (int i = 0; i < numBufs; i++) {
+            final int numBytes;
+            final int remaining = byteArray.length - byteIndex;
+            if (remaining < sizeLimit) {
+                numBytes = remaining;
+            } else {
+                numBytes = sizeLimit;
+            }
+            bufs[i] = ByteBuffer.wrap(byteArray, byteIndex, numBytes);
+            byteIndex += sizeLimit;
+        }
+        return bufs;
+    }
+    
+    /**
      * Splits the specified <code>ByteBuffer</code> into smaller
      * <code>ByteBuffer</code>s of the specified size. The remaining bytes in
      * the buffer must be greater than the chunk size. This method will create
