@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
@@ -47,6 +48,22 @@ public class CommonUtils {
         } catch (final UnsupportedEncodingException e) {
             return "";
         }
+    }
+    
+    public static void threadedCopy(final InputStream is, final OutputStream os,
+        final String threadName) {
+        final Runnable runner = new Runnable() {
+            public void run() {
+                try {
+                    IOUtils.copy(is, os);
+                } catch (final IOException e) {
+                    LOG.info("Exception on copy. Hung up?", e);
+                }
+            }
+        };
+        final Thread t = new Thread(runner, threadName);
+        t.setDaemon(true);
+        t.start();
     }
     
     /**

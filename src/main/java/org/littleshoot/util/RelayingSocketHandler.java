@@ -13,8 +13,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Socket handler that simply relays data to a server socket.
  */
-public class RelayingSocketHandler implements SocketListener
-    {
+public class RelayingSocketHandler implements SessionSocketListener {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
     
@@ -41,7 +40,7 @@ public class RelayingSocketHandler implements SocketListener
         this.serverAddress = serverAddress;
     }
 
-    public void onSocket(final Socket sock) throws IOException {
+    public void onSocket(final String id, final Socket sock) throws IOException {
         log.info("Relaying socket connecting to: {}", this.serverAddress);
         final Socket relay = new Socket();
         relay.connect(this.serverAddress, 30 * 1000);
