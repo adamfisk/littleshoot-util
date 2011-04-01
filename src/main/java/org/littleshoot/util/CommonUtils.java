@@ -109,10 +109,20 @@ public class CommonUtils {
 
     public static boolean isTrue(final String varName) {
         final String prop = System.getProperty(varName);
-        if (StringUtils.isBlank(prop)) {
+        return isStringTrue(prop);
+    }
+
+    public static boolean isPropertyTrue(final String key) {
+        final Properties props = getProps();
+        final String prop = props.getProperty(key);
+        return isStringTrue(prop);
+    }
+    
+    public static boolean isStringTrue(final String str) {
+        if (StringUtils.isBlank(str)) {
             return false;
         }
-        return prop.trim().equalsIgnoreCase("true");
+        return str.trim().equalsIgnoreCase("true");
     }
 
     public static File getPropsFile() {
@@ -164,7 +174,7 @@ public class CommonUtils {
         props.setProperty(key, value);
         saveProps(props);
     }
-
+    
     /**
      * Makes a native call with a full string argument that will be parsed
      * into separate command line tokens with white space delimiters. If your
