@@ -42,4 +42,6 @@ public class ShootConstants
 
     public static final String HII_KEY = "hii.key";
     
+    public static final String HII = "hii";
+    
     }
