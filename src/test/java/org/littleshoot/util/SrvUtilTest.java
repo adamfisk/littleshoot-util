@@ -20,6 +20,6 @@ public class SrvUtilTest
         
         System.out.println(addresses);
         
-        assertEquals(3, addresses.size());
+        assertEquals(2, addresses.size());
         }
     }
