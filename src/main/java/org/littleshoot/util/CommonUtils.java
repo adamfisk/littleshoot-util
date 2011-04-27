@@ -220,4 +220,25 @@ public class CommonUtils {
             return "";
         }
     }
+    
+    /**
+     * Combines the specified arrays into a single array.
+     * 
+     * @param arrays The arrays to combine.
+     * @return The combined arrays.
+     */
+    public static byte[] combine(final byte[]... arrays) {
+        int length = 0;
+        for (final byte[] array : arrays) {
+            length += array.length;
+        }
+        final byte[] joinedArray = new byte[length];
+        
+        int position = 0;
+        for (final byte[] array : arrays) {
+            System.arraycopy(array, 0, joinedArray, position, array.length);
+            position += array.length;
+        }
+        return joinedArray;
+    }
 }
