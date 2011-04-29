@@ -30,17 +30,36 @@ public class RelayingSocketHandler implements SessionSocketListener {
     private static final int LARGE_BUFFER_SIZE = 1024 * 16;
 
     private final InetSocketAddress serverAddress;
+
+    private final byte[] readKey;
+
+    private final byte[] writeKey;
  
     /**
      * Creates a new socket handler. Allows a custom port.
      * 
      * @param port The port to use for connecting locally.
      */
+    /*
     public RelayingSocketHandler(final InetSocketAddress serverAddress) {
+        this(serverAddress, null, null);
+    }
+    */
+    
+    /**
+     * Creates a new socket handler. Allows a custom port.
+     * 
+     * @param port The port to use for connecting locally.
+     */
+    public RelayingSocketHandler(final InetSocketAddress serverAddress,
+        final byte[] readKey, final byte[] writeKey) {
         this.serverAddress = serverAddress;
+        this.readKey = readKey;
+        this.writeKey = writeKey;
     }
 
-    public void onSocket(final String id, final Socket sock) throws IOException {
+    public void onSocket(final String id, final Socket sock) 
+        throws IOException {
         log.info("Relaying socket connecting to: {}", this.serverAddress);
         final Socket relay = new Socket();
         relay.connect(this.serverAddress, 30 * 1000);
@@ -58,25 +77,41 @@ public class RelayingSocketHandler implements SessionSocketListener {
         // depend on what connection you're taking the perspective of, but
         // it doesn't really matter.
         threadedCopy(externalIs, relayOs, "ReadFromExternal", 
-            SMALL_BUFFER_SIZE, sock);
+            SMALL_BUFFER_SIZE, sock, this.readKey);
         threadedCopy(relayIs, externalOs, "WriteToExternal", 
-            LARGE_BUFFER_SIZE, sock);
+            LARGE_BUFFER_SIZE, sock, this.writeKey);
     }
 
     private void threadedCopy(final InputStream is, final OutputStream os,
-        final String threadNameId, final int bufferSize, final Socket sock) {
+        final String threadNameId, final int bufferSize, final Socket sock, 
+        final byte[] key) {
         final Runnable runner = new Runnable() {
             public void run() {
                 try {
-                    copyLarge(is, os, bufferSize);
+                    if (key == null) {
+                        copyLarge(is, os, bufferSize);
+                    }
+                    else {
+                        CommonUtils.decode(key, is, new DataListener() {
+                            
+                            public void onData(final byte[] data) {
+                                try {
+                                    os.write(data);
+                                } catch (IOException e) {
+                                    // This will happen if the other side 
+                                    // just closes the socket, for example.
+                                    log.debug("Error copying socket data on "+
+                                        threadNameId, e);
+                                }
+                            }
+                        });
+                    }
                 } catch (final IOException e) {
                     // This will happen if the other side just closes the
                     // socket, for example.
-                    log.debug("Error copying socket data on " + threadNameId,
-                            e);
+                    log.debug("Error copying socket data on "+threadNameId, e);
                 } catch (final Throwable t) {
-                    log.warn("Error copying socket data on " + threadNameId,
-                            t);
+                    log.warn("Error copying socket data on " + threadNameId, t);
                 } finally {
                     // Flush to be sure we've written everything.
                     try {

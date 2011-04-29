@@ -80,66 +80,52 @@ public final class IoUtils
      * @throws IOException If there's an IO error copying the bytes.
      */
     public static long copy(final InputStream in, final OutputStream out,
-        final long originalByteCount) throws IOException 
-        {
-        if (originalByteCount < 0)
-            {
-            throw new IllegalArgumentException("Invalid byte count: " + 
-                    originalByteCount);
-            }
+            final long originalByteCount) throws IOException {
+        if (originalByteCount < 0) {
+            throw new IllegalArgumentException("Invalid byte count: "
+                    + originalByteCount);
+        }
         final byte buffer[] = new byte[DEFAULT_BUFFER_SIZE];
         int len = 0;
         long written = 0;
         long byteCount = originalByteCount;
-        try
-            {
-            while (byteCount > 0)
-                {
-                //len = in.read(buffer);
-                if (byteCount < DEFAULT_BUFFER_SIZE)
-                    {
-                    len = in.read(buffer, 0, (int)byteCount);
-                    }
-                else
-                    {
+        try {
+            while (byteCount > 0) {
+                // len = in.read(buffer);
+                if (byteCount < DEFAULT_BUFFER_SIZE) {
+                    len = in.read(buffer, 0, (int) byteCount);
+                } else {
                     len = in.read(buffer, 0, DEFAULT_BUFFER_SIZE);
-                    }
+                }
 
-                if (len == -1)
-                    {
+                if (len == -1) {
                     LOG.debug("Breaking on length = -1");
-                    //System.out.println("Breaking on -1");
+                    // System.out.println("Breaking on -1");
                     break;
-                    }
+                }
 
                 byteCount -= len;
-                LOG.info("Total written: "+written);
+                LOG.info("Total written: " + written);
                 out.write(buffer, 0, len);
                 written += len;
-                //LOG.debug("IoUtils now written: "+written);
-                }
-            //System.out.println("Out of while: "+byteCount);
+                // LOG.debug("IoUtils now written: "+written);
+            }
+            // System.out.println("Out of while: "+byteCount);
             return written;
-            }
-        catch (final IOException e)
-            {
-            LOG.debug("Got IOException during copy after writing "+
-                written+" of "+originalByteCount, e);
+        } catch (final IOException e) {
+            LOG.debug("Got IOException during copy after writing " + written
+                    + " of " + originalByteCount, e);
             e.printStackTrace();
             throw e;
-            }
-        catch (final RuntimeException e)
-            {
-            LOG.debug("Runtime error after writing "+
-                written+" of "+originalByteCount, e);
+        } catch (final RuntimeException e) {
+            LOG.debug("Runtime error after writing " + written + " of "
+                    + originalByteCount, e);
             e.printStackTrace();
             throw e;
-            }
-        finally
-            {
+        } finally {
             out.flush();
-            }
         }
+    }
 
     /**
      * Copy method for copying data from an {@link InputStream} to a 
