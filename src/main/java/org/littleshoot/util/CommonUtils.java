@@ -1,6 +1,5 @@
 package org.littleshoot.util;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -27,6 +26,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
@@ -55,6 +55,9 @@ public class CommonUtils {
     public static final String SEEDING_ENABLED_KEY = "SEEDING_ENABLED";
 
     public static final String UPLOAD_SPEED_KEY = "UPLOAD_SPEED";
+    
+    //private static final String DEFAULT_CIPHER = "AES/CBC/PKCS5Padding";
+    private static final String DEFAULT_CIPHER = "AES";
     
     private final static KeyGenerator keyGenerator;
     
@@ -279,11 +282,12 @@ public class CommonUtils {
     }
     
 
-    private static final int SIZE_LIMIT = 2 ^ 16;
+    private static final int SIZE_LIMIT = (int) Math.pow(2, 16);
     
-    public static byte[] encode(final byte[] key, final byte[] data) {
-        if (data.length < SIZE_LIMIT) {
-            return encodeSingleMessage(key, data);
+    public static byte[] encode(final byte[] key, final byte[] data, 
+        final int off, final int len) {
+        if (len < SIZE_LIMIT) {
+            return encodeSingleMessage(key, data, off, len);
         }
         
         final int numArrays = 
@@ -302,7 +306,7 @@ public class CommonUtils {
             }
             final byte[] array = new byte[size];
             System.arraycopy(data, index, array, 0, array.length);
-            final byte[] msg = encodeSingleMessage(key, array);
+            final byte[] msg = encodeSingleMessage(key, array, index, size);
             arrays.add(msg);
             index += size;
         }
@@ -310,7 +314,7 @@ public class CommonUtils {
     }
 
     public static byte[] encodeSingleMessage(final byte[] key, 
-        final byte[] data) {
+        final byte[] data, final int off, final int len) {
         /*
         0                   1                   2                   3
         0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -328,9 +332,10 @@ public class CommonUtils {
         final Cipher cipher;
         final byte[] cipherText;
         try {
-            cipher = Cipher.getInstance("AES");
+            cipher = Cipher.getInstance(DEFAULT_CIPHER);
             cipher.init(Cipher.ENCRYPT_MODE, skeySpec);
             cipherText = cipher.doFinal(data);
+            
         } catch (final NoSuchAlgorithmException e) {
             throw new IllegalArgumentException("No AES?", e);
         } catch (final NoSuchPaddingException e) {
@@ -344,11 +349,9 @@ public class CommonUtils {
         }
         
         final byte[] version = new byte[] {1};
-        final int big = (cipherText.length & 0x0000FF00) >> 8;
-        final byte[] length = new byte[] {
-            (byte) big, 
-            (byte) (cipherText.length & 0x000000FF)
-        };
+        
+        final byte[] intBytes = intToByteArray(cipherText.length);
+        final byte[] length = new byte[]{intBytes[2], intBytes[3]};
 
         final Mac mac;
         try {
@@ -366,118 +369,6 @@ public class CommonUtils {
         final byte[] rawMac = mac.doFinal();
         return CommonUtils.combine(version, length, cipherText, rawMac);
     }
-
-    public static void decode(final byte[] key, final InputStream is, 
-        final DataListener dl) throws IOException {
-        long lastCopied = 0;
-        while (lastCopied != -1L) {
-            final ByteArrayOutputStream versionAndSize = 
-                new ByteArrayOutputStream(3);
-            if (copy(is, versionAndSize, 3) == -1) {
-                throw new IOException("Input closed!!");
-            }
-            final byte[] versionAndSizeBytes = versionAndSize.toByteArray();
-            
-            final int size = 
-                (versionAndSizeBytes[1] << 8) + versionAndSizeBytes[2];            
-            final ByteArrayOutputStream baos = new ByteArrayOutputStream(size);
-            if (copy(is, baos, size) == -1) {
-                throw new IOException("Input closed!!");
-            }
-            final byte[] cipherText = baos.toByteArray();
-            
-            final ByteArrayOutputStream macOs = new ByteArrayOutputStream(32);
-            if (copy(is, macOs, 32) == -1) {
-                throw new IOException("Input closed!!");
-            }
-            
-            final SecretKeySpec skeySpec = new SecretKeySpec(key, "AES");
-            final Cipher cipher;
-            final byte[] plainText;
-            try {
-                cipher = Cipher.getInstance("AES");
-                cipher.init(Cipher.DECRYPT_MODE, skeySpec);
-                plainText = cipher.doFinal(cipherText);
-            } catch (final NoSuchAlgorithmException e) {
-                throw new IllegalArgumentException("No AES?", e);
-            } catch (final NoSuchPaddingException e) {
-                throw new IllegalArgumentException("No padding?", e);
-            } catch (final InvalidKeyException e) {
-                throw new IllegalArgumentException("Bad key?", e);
-            } catch (final IllegalBlockSizeException e) {
-                throw new IllegalArgumentException("Bad block size?", e);
-            } catch (final BadPaddingException e) {
-                throw new IllegalArgumentException("Bad padding?", e);
-            }
-            
-            final byte[] mac = macOs.toByteArray();
-            final Mac mac256;
-            try {
-                mac256 = Mac.getInstance("hmacSHA256");
-                mac256.init(skeySpec);
-            } catch (final NoSuchAlgorithmException e) {
-                throw new IllegalArgumentException("No hmacSHA256?", e);
-            } catch (final InvalidKeyException e) {
-                throw new IllegalArgumentException("Bad key?", e);
-            }
-            mac256.update(versionAndSizeBytes);
-            mac256.update(cipherText);
-            final byte[] computedMac = mac256.doFinal();
-            if (!Arrays.equals(computedMac, mac)) {
-                throw new IllegalArgumentException("Macs don't match!!");
-            }
-            dl.onData(plainText);
-        }
-    }
-    
-    private static long copy(final InputStream in, final OutputStream out,
-            final long originalByteCount) throws IOException {
-        if (originalByteCount < 0) {
-            throw new IllegalArgumentException("Invalid byte count: "
-                    + originalByteCount);
-        }
-        final int DEFAULT_BUFFER_SIZE = 4096;
-        final byte buffer[] = new byte[DEFAULT_BUFFER_SIZE];
-        int len = 0;
-        long written = 0;
-        long byteCount = originalByteCount;
-        try {
-            while (byteCount > 0) {
-                // len = in.read(buffer);
-                if (byteCount < DEFAULT_BUFFER_SIZE) {
-                    len = in.read(buffer, 0, (int) byteCount);
-                } else {
-                    len = in.read(buffer, 0, DEFAULT_BUFFER_SIZE);
-                }
-
-                if (len == -1) {
-                    LOG.debug("Breaking on length = -1");
-                    // System.out.println("Breaking on -1");
-                    return -1;
-                }
-
-                byteCount -= len;
-                LOG.info("Total written: " + written);
-                out.write(buffer, 0, len);
-                written += len;
-                // LOG.debug("IoUtils now written: "+written);
-            }
-            // System.out.println("Out of while: "+byteCount);
-            return written;
-        } catch (final IOException e) {
-            LOG.debug("Got IOException during copy after writing " + written
-                    + " of " + originalByteCount, e);
-            e.printStackTrace();
-            throw e;
-        } catch (final RuntimeException e) {
-            LOG.debug("Runtime error after writing " + written + " of "
-                    + originalByteCount, e);
-            e.printStackTrace();
-            throw e;
-        } finally {
-            out.flush();
-        }
-    }
     
     public static byte[] decode(final byte[] key, final byte[] msg) {
         /*
@@ -494,12 +385,15 @@ public class CommonUtils {
        +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
        */
         final byte version = msg[0];
+        System.out.println("Version: "+version);
         
         // This needs to be an int even though it's two bytes because shorts
         // are signed
         final int size = (msg[1] << 8) + msg[2];
+        System.out.println("Size: "+size);
         
         final byte[] cipherText = new byte[size];
+        
         System.arraycopy(msg, 3, cipherText, 0, cipherText.length);
         
         final byte[] rawMac = new byte[32];
@@ -509,8 +403,10 @@ public class CommonUtils {
         final Cipher cipher;
         final byte[] plainText;
         try {
-            cipher = Cipher.getInstance("AES");
+            cipher = Cipher.getInstance(DEFAULT_CIPHER);
             cipher.init(Cipher.DECRYPT_MODE, skeySpec);
+            //cipher.update(cipherText, off, len);
+            //plainText = cipher.doFinal();
             plainText = cipher.doFinal(cipherText);
         } catch (final NoSuchAlgorithmException e) {
             throw new IllegalArgumentException("No AES?", e);
@@ -544,6 +440,7 @@ public class CommonUtils {
         mac256.update(cipherText);
         final byte[] mac = mac256.doFinal();
 
+        System.out.println("Mac: "+CommonUtils.toHex(mac));
         // Now make sure the MACs match.
         if (!Arrays.equals(mac, rawMac)) {
             LOG.error("MACs don't match!!");
@@ -573,5 +470,38 @@ public class CommonUtils {
             body = Base64.decodeBase64(base64);
         }
         return body;
+    }
+    
+    public static String toHex(final byte[] data) {
+        return new String(Hex.encodeHex(data));
+    }
+    
+    /**
+     * Converts a two byte array to an integer
+     * 
+     * @param b a byte array of length 2
+     * @return an int representing the unsigned short
+     */
+    public static final int unsignedShortToInt(final byte[] b)  {
+        int i = 0;
+        i |= b[0] & 0xFF;
+        i <<= 8;
+        i |= b[1] & 0xFF;
+        return i;
+    }
+    
+    /**
+     * Converts an int to an unsigned byte array.
+     * 
+     * @param value The int.
+     * @return The unsigned byte array.
+     */
+    public static final byte[] intToByteArray(final int value) {
+        return new byte[] {
+            (byte)(value >>> 24),
+            (byte)(value >>> 16),
+            (byte)(value >>> 8),
+            (byte)value
+        };
     }
 }

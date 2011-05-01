@@ -88,24 +88,7 @@ public class RelayingSocketHandler implements SessionSocketListener {
         final Runnable runner = new Runnable() {
             public void run() {
                 try {
-                    if (key == null) {
-                        copyLarge(is, os, bufferSize);
-                    }
-                    else {
-                        CommonUtils.decode(key, is, new DataListener() {
-                            
-                            public void onData(final byte[] data) {
-                                try {
-                                    os.write(data);
-                                } catch (IOException e) {
-                                    // This will happen if the other side 
-                                    // just closes the socket, for example.
-                                    log.debug("Error copying socket data on "+
-                                        threadNameId, e);
-                                }
-                            }
-                        });
-                    }
+                    copyLarge(is, os, bufferSize);
                 } catch (final IOException e) {
                     // This will happen if the other side just closes the
                     // socket, for example.
