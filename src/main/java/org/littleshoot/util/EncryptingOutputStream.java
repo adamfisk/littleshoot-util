@@ -1,16 +1,13 @@
 package org.littleshoot.util;
 
-import java.io.OutputStream;
 import java.io.IOException;
-import java.net.Socket;
+import java.io.OutputStream;
 
 /**
  * An output stream that write encrypted records whose integrity is verified
  * with a SHA-256 MAC.
  */
 public class EncryptingOutputStream extends OutputStream {
-
-    private Socket c;
 
     private final OutputStream os;
     private final byte[] key;
@@ -30,8 +27,8 @@ public class EncryptingOutputStream extends OutputStream {
      * Write the data out, NOW.
      */
     @Override
-    synchronized public void write(byte data[], int off, int len)
-            throws IOException {
+    synchronized public void write(final byte data[], final int off, 
+        final int len) throws IOException {
         
         // TODO: Ideally we'd make sure to fill up each message as much as
         // we can, but this will work for now!
@@ -49,7 +46,7 @@ public class EncryptingOutputStream extends OutputStream {
 
     @Override
     public void close() throws IOException {
-        c.close();
+        this.os.close();
     }
 
     // inherit no-op flush()
