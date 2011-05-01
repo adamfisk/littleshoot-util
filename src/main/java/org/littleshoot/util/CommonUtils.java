@@ -385,12 +385,11 @@ public class CommonUtils {
        +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
        */
         final byte version = msg[0];
-        System.out.println("Version: "+version);
         
         // This needs to be an int even though it's two bytes because shorts
         // are signed
-        final int size = (msg[1] << 8) + msg[2];
-        System.out.println("Size: "+size);
+        final int size = unsignedShortToInt(new byte[] {msg[1], msg[2]});
+        LOG.info("Size: "+size);
         
         final byte[] cipherText = new byte[size];
         
@@ -440,7 +439,6 @@ public class CommonUtils {
         mac256.update(cipherText);
         final byte[] mac = mac256.doFinal();
 
-        System.out.println("Mac: "+CommonUtils.toHex(mac));
         // Now make sure the MACs match.
         if (!Arrays.equals(mac, rawMac)) {
             LOG.error("MACs don't match!!");

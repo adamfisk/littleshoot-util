@@ -40,7 +40,7 @@ public class EncryptingOutputStream extends OutputStream {
      * Write one byte now.
      */
     @Override
-    synchronized public void write(int i) throws IOException {
+    synchronized public void write(final int i) throws IOException {
         write(new byte[] {(byte)i}, 0, 1);
     }
 
