@@ -22,16 +22,25 @@ public class DecryptingInputStreamTest {
         
         final DecryptingInputStream is = new DecryptingInputStream(readKey, bais);
         final byte[] readBuf = new byte[20];
-        System.out.println("About to read");
-        is.read(readBuf, 0, readBuf.length);
+        final int read = is.read(readBuf, 0, readBuf.length);
         
-        final String decoded = new String(readBuf).trim();
-        System.out.println("read: "+new String(readBuf));
+        final String decoded = new String(readBuf, 0, read);
         assertEquals(original, decoded);
     }
     
     @Test public void testReallyLongLengthRead() throws Exception {
+        final String original = longMessage("helloooo world");
+        final byte[] readKey = CommonUtils.generateKey();
+        final byte[] buf = buildBuf(original, readKey);
+        final ByteArrayInputStream bais = new ByteArrayInputStream(buf);
         
+        final DecryptingInputStream is = 
+            new DecryptingInputStream(readKey, bais);
+        final byte[] readBuf = new byte[1024 * 16];
+        final int read = is.read(readBuf, 0, readBuf.length);
+        
+        final String decoded = new String(readBuf, 0, read);
+        assertEquals(original, decoded);
     }
 
     @Test public void testMultipleMessages() throws Exception {
@@ -80,7 +89,6 @@ public class DecryptingInputStreamTest {
         final int chunkSize = 20;
         final byte[] readBuf = new byte[chunkSize];
         final StringBuilder sb = new StringBuilder();
-        System.out.println("About to read");
         int i = 0;
         while (index < original.getBytes().length) {
             final int read = is.read(readBuf, 0, readBuf.length);

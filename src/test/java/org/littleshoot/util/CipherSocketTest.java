@@ -80,14 +80,11 @@ public class CipherSocketTest {
                     final Socket plainSock = server.accept();
                     final Socket sock = 
                         new CipherSocket(plainSock, writeKey, readKey);
-                    System.out.println("Accepted socket");
                     final InputStream is = sock.getInputStream();
                     final byte[] ciphertext = new byte[1024*1024];
-                    is.read(ciphertext);
-                    System.out.println("Decoding");
-                    //final byte[] original = 
-                    //    CommonUtils.decode(rawKey, ciphertext);
-                    final String originalString = new String(ciphertext).trim();
+                    final int read = is.read(ciphertext);
+                    final String originalString = 
+                        new String(ciphertext, 0, read);
                     log.info("Got original string: {}", originalString);
                     serverMessage.set(originalString);
                     server.close();

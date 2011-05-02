@@ -232,7 +232,7 @@ public class CipherSocket extends Socket {
 
     @Override
     public String toString() {
-        return sock.toString();
+        return "CipherSocket [sock=" + sock + "]";
     }
 
 }

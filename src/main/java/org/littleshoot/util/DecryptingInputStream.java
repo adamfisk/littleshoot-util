@@ -98,6 +98,11 @@ public class DecryptingInputStream extends InputStream {
         this.inputStream.close();
     }
 
+    @Override
+    public String toString() {
+        return "DecryptingInputStream [inputStream=" + inputStream + "]";
+    }
+    
     // inherit default mark/reset behavior (throw Exceptions) from InputStream
 
 }
