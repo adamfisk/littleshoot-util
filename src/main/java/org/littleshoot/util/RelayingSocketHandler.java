@@ -58,9 +58,18 @@ public class RelayingSocketHandler implements SessionSocketListener {
         this.writeKey = writeKey;
     }
 
-    public void onSocket(final String id, final Socket sock) 
+    public void onSocket(final String id, final Socket encryptedSocket) 
         throws IOException {
         log.info("Relaying socket connecting to: {}", this.serverAddress);
+        
+        final Socket sock;
+        if (readKey == null || writeKey == null) {
+            // In this case the socket will not actually have encrypted data.
+            sock = encryptedSocket;
+        } else {
+            sock = new CipherSocket(encryptedSocket, writeKey, readKey);
+        }
+            
         final Socket relay = new Socket();
         relay.connect(this.serverAddress, 30 * 1000);
 
