@@ -25,8 +25,6 @@ public class InputRecord {
     
     private static final int MAC_SIZE = 32;
 
-    private final byte version = 1;
-
     private int size = -1;
 
     private final byte[] readKey;
@@ -36,7 +34,6 @@ public class InputRecord {
     private final ByteBuffer header = ByteBuffer.wrap(headerBytes);
     
     private ByteBuffer curBuffer = header;
-
 
     private byte[] bodyBytes;
 
@@ -74,7 +71,6 @@ public class InputRecord {
                 if (curBuffer.hasRemaining()) {
                     return;
                 } else {
-                    log.info("Read all data 1");
                     decryptAndVerify(curBuffer);
                 }
             }
@@ -83,7 +79,6 @@ public class InputRecord {
             if (curBuffer.hasRemaining()) {
                 return;
             } else {
-                log.info("Read all data 2");
                 decryptAndVerify(curBuffer);
             }
         }
@@ -120,11 +115,7 @@ public class InputRecord {
         } catch (final BadPaddingException e) {
             throw new IllegalArgumentException("Bad padding?", e);
         }
-        
-        final byte[] length = new byte[] {
-            this.headerBytes[1], 
-            this.headerBytes[2]
-        };
+
         // Does the mac include the length and the version? Probably.
         final Mac mac256;
         try {
@@ -135,8 +126,8 @@ public class InputRecord {
         } catch (final InvalidKeyException e) {
             throw new IllegalArgumentException("Bad key?", e);
         }
-        mac256.update(version);
-        mac256.update(length);
+
+        mac256.update(headerBytes);
         mac256.update(cipherText);
         final byte[] mac = mac256.doFinal();
 
@@ -144,6 +135,7 @@ public class InputRecord {
         if (!Arrays.equals(mac, rawMac)) {
             log.error("MACs don't match!!");
             log.error("Decrypted: "+new String(plain));
+            log.error("Tried to match original:\n"+CommonUtils.toHex(rawMac)+"\n"+CommonUtils.toHex(mac));
             throw new IllegalArgumentException("Macs don't match!!");
         }
         this.plainText = plain;

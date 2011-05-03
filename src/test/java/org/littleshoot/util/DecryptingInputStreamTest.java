@@ -14,6 +14,22 @@ public class DecryptingInputStreamTest {
     private static final Logger log = 
         LoggerFactory.getLogger(DecryptingInputStreamTest.class);
     
+    @Test public void testBytesRead() throws Exception {
+        final String original = "helloooo world";
+        final byte[] readKey = CommonUtils.generateKey();
+        final byte[] buf = buildBuf(original, readKey);
+        final ByteArrayInputStream bais = new ByteArrayInputStream(buf);
+        
+        final DecryptingInputStream is = new DecryptingInputStream(readKey, bais);
+        final byte[] readBuf = new byte[20];
+        final int read = is.read(readBuf, 0, readBuf.length);
+        
+        assertEquals(original.length(), read);
+        
+        final String decoded = new String(readBuf, 0, read);
+        assertEquals(original, decoded);
+    }
+    
     @Test public void testRead() throws Exception {
         final String original = "helloooo world";
         final byte[] readKey = CommonUtils.generateKey();

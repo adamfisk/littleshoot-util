@@ -9,6 +9,8 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -23,6 +25,7 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.Mac;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
+import javax.crypto.ShortBufferException;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.apache.commons.codec.binary.Base64;
@@ -315,6 +318,7 @@ public class CommonUtils {
 
     public static byte[] encodeSingleMessage(final byte[] key, 
         final byte[] data, final int off, final int len) {
+        LOG.info("Original plain byte array length: "+data.length);
         /*
         0                   1                   2                   3
         0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -330,12 +334,14 @@ public class CommonUtils {
        */
         final SecretKeySpec skeySpec = new SecretKeySpec(key, "AES");
         final Cipher cipher;
-        final byte[] cipherText;
+        final ByteBuffer dataBuf = ByteBuffer.wrap(data, off, len);
+        final byte[] cipherTextBytes = new byte[len * 2];
+        final ByteBuffer cipherText = ByteBuffer.wrap(cipherTextBytes);
+        final int written;
         try {
             cipher = Cipher.getInstance(DEFAULT_CIPHER);
             cipher.init(Cipher.ENCRYPT_MODE, skeySpec);
-            cipherText = cipher.doFinal(data);
-            
+            written = cipher.doFinal(dataBuf, cipherText);
         } catch (final NoSuchAlgorithmException e) {
             throw new IllegalArgumentException("No AES?", e);
         } catch (final NoSuchPaddingException e) {
@@ -346,11 +352,15 @@ public class CommonUtils {
             throw new IllegalArgumentException("Bad block size?", e);
         } catch (final BadPaddingException e) {
             throw new IllegalArgumentException("Bad padding?", e);
+        } catch (final ShortBufferException e) {
+            throw new IllegalArgumentException("Cipher buffer too short?", e);
         }
         
         final byte[] version = new byte[] {1};
         
-        final byte[] intBytes = intToByteArray(cipherText.length);
+        //final byte[] intBytes = intToByteArray(cipherText.length);
+        final byte[] intBytes = intToByteArray(written);
+        LOG.info("Message length: "+new BigInteger(intBytes));
         final byte[] length = new byte[]{intBytes[2], intBytes[3]};
 
         final Mac mac;
@@ -363,11 +373,17 @@ public class CommonUtils {
             throw new IllegalArgumentException("Bad key?", e);
         }
 
+        final byte[] cipherBytes = new byte[written];
+        System.arraycopy(cipherTextBytes, 0, cipherBytes, 0, cipherBytes.length);
+        
         mac.update(version);
         mac.update(length);
-        mac.update(cipherText);
+        mac.update(cipherBytes);
         final byte[] rawMac = mac.doFinal();
-        return CommonUtils.combine(version, length, cipherText, rawMac);
+
+        final byte[] full = 
+            CommonUtils.combine(version, length, cipherBytes, rawMac);
+        return full;
     }
     
     public static byte[] decode(final byte[] key, final byte[] msg) {

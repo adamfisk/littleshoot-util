@@ -3,12 +3,18 @@ package org.littleshoot.util;
 import java.io.IOException;
 import java.io.OutputStream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * An output stream that write encrypted records whose integrity is verified
  * with a SHA-256 MAC.
  */
 public class EncryptingOutputStream extends OutputStream {
 
+    private static final Logger LOG = 
+        LoggerFactory.getLogger(EncryptingOutputStream.class);
+    
     private final OutputStream os;
     private final byte[] key;
 
