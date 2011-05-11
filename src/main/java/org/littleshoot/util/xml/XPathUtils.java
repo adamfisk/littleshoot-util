@@ -25,8 +25,7 @@ import org.xml.sax.SAXException;
 /**
  * Implementation of XPath utilities. 
  */
-public class XPathUtils 
-    {
+public class XPathUtils  {
 
     private static final Logger LOG = 
         LoggerFactory.getLogger(XPathUtils.class);
@@ -39,54 +38,40 @@ public class XPathUtils
      * @param path The built-in java XPath class.
      * @param doc The XML document to use XPath on.
      */
-    private XPathUtils(final XPath path, final Document doc)
-        {
+    private XPathUtils(final XPath path, final Document doc) {
         m_path = path;
         m_doc = doc;
-        }
-    
+    }
+
     /**
-     * Creates a new {@link XPathUtils} instance from the data at the specified 
+     * Creates a new {@link XPathUtils} instance from the data at the specified
      * HTTP url.
      * 
      * @param url The URL to load XML data from.
      * @return An {@link XPathUtils} instance for the data at the given URL.
      */
-    public static XPathUtils newXPath(final URL url)
-        {
+    public static XPathUtils newXPath(final URL url) {
         final DefaultHttpClient client = new DefaultHttpClientImpl();
         final GetMethod method = new GetMethod(url.toExternalForm());
-        try
-            {
+        try {
             final int responseCode = client.executeMethod(method);
-            if (responseCode != HttpStatus.SC_OK)
-                {
-                LOG.warn("Unexpected response code: "+responseCode);
-                }
-            else
-                {
+            if (responseCode != HttpStatus.SC_OK) {
+                LOG.warn("Unexpected response code: " + responseCode);
+            } else {
                 final InputStream is = method.getResponseBodyAsStream();
                 return XPathUtils.newXPath(is);
-                }
             }
-        catch (final HttpException e)
-            {
+        } catch (final HttpException e) {
             LOG.warn("Could not handle XPath", e);
-            }
-        catch (final IOException e)
-            {
+        } catch (final IOException e) {
             LOG.warn("Could not handle XPath", e);
-            }
-        catch (final SAXException e)
-            {
+        } catch (final SAXException e) {
             LOG.warn("Could not handle XPath", e);
-            }
-        finally
-            {
+        } finally {
             method.releaseConnection();
-            }
-        return null;
         }
+        return null;
+    }
   
     /**
      * Creates a new {@link XPathUtils} instance.
@@ -96,14 +81,13 @@ public class XPathUtils
      * @throws SAXException If there's a SAX error in the XML.
      * @throws IOException If there's an IO error reading the stream.
      */
-    public static XPathUtils newXPath(final String str) 
-        throws SAXException, IOException
-        {
+    public static XPathUtils newXPath(final String str) throws SAXException,
+            IOException {
         final XPathFactory xpfactory = XPathFactory.newInstance();
         final XPath xPath = xpfactory.newXPath();
         final Document doc = XmlUtils.toDoc(str);
         return new XPathUtils(xPath, doc);
-        }
+    }
     
     /**
      * Creates a new {@link XPathUtils} instance.
@@ -113,14 +97,13 @@ public class XPathUtils
      * @throws SAXException If there's a SAX error in the XML.
      * @throws IOException If there's an IO error reading the stream.
      */
-    public static XPathUtils newXPath(final InputStream is) 
-        throws SAXException, IOException
-        {
+    public static XPathUtils newXPath(final InputStream is)
+            throws SAXException, IOException {
         final XPathFactory xpfactory = XPathFactory.newInstance();
         final XPath xPath = xpfactory.newXPath();
         final Document doc = XmlUtils.toDoc(is);
         return new XPathUtils(xPath, doc);
-        }
+    }
 
     /**
      * Creates a new {@link XPathUtils} instance.
@@ -128,42 +111,37 @@ public class XPathUtils
      * @param doc The XML data.
      * @return A new {@link XPathUtils} instance.
      */
-    public static XPathUtils newXPath(final Document doc)
-        {
+    public static XPathUtils newXPath(final Document doc) {
         final XPathFactory xpfactory = XPathFactory.newInstance();
         final XPath xPath = xpfactory.newXPath();
         return new XPathUtils(xPath, doc);
-        }
+    }
 
-    public int getInt(final String xPath) throws XPathExpressionException
-        {
-        return ((Double) this.m_path.evaluate(xPath, this.m_doc, 
-            XPathConstants.NUMBER)).intValue();
-        }
+    public int getInt(final String xPath) throws XPathExpressionException {
+        return ((Double) this.m_path.evaluate(xPath, this.m_doc,
+                XPathConstants.NUMBER)).intValue();
+    }
 
-    public String getString(final String xPath) throws XPathExpressionException
-        {
-        return (String) this.m_path.evaluate(xPath, this.m_doc, 
-            XPathConstants.STRING);
-        }
+    public String getString(final String xPath) throws XPathExpressionException {
+        return (String) this.m_path.evaluate(xPath, this.m_doc,
+                XPathConstants.STRING);
+    }
 
-    public NodeList getNodes(final String xPath) throws XPathExpressionException
-        {
-        return (NodeList) this.m_path.evaluate(xPath, this.m_doc, 
-            XPathConstants.NODESET);
-        }
+    public NodeList getNodes(final String xPath)
+            throws XPathExpressionException {
+        return (NodeList) this.m_path.evaluate(xPath, this.m_doc,
+                XPathConstants.NODESET);
+    }
 
-    public URL getUrl(final String xPath) throws MalformedURLException, 
-        XPathExpressionException
-        {
+    public URL getUrl(final String xPath) throws MalformedURLException,
+            XPathExpressionException {
         final String url = getString(xPath);
         return new URL(url);
-        }
-
-    public Node getNode(final String xPath) throws XPathExpressionException
-        {
-        return (Node) this.m_path.evaluate(xPath, this.m_doc, 
-            XPathConstants.NODE);
-        }
-
     }
+
+    public Node getNode(final String xPath) throws XPathExpressionException {
+        return (Node) this.m_path.evaluate(xPath, this.m_doc,
+                XPathConstants.NODE);
+    }
+
+}
