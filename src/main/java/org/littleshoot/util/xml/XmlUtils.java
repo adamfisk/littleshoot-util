@@ -35,8 +35,7 @@ import org.xml.sax.SAXException;
 /**
  * XML utilities class.
  */
-public final class XmlUtils
-    {
+public final class XmlUtils {
     
     private static final Logger LOG = LoggerFactory.getLogger(XmlUtils.class);
     
@@ -54,58 +53,44 @@ public final class XmlUtils
      * first child.
      * @param newValue The new text value to place in the node.
      */
-    public static void replaceNodeValue(final Document doc, final String xPath, 
-        final String newValue)
-        {
+    public static void replaceNodeValue(final Document doc, final String xPath,
+            final String newValue) {
         final Text textNode = doc.createTextNode(newValue);
-        try
-            {
-            final Node node = (Node) s_path.evaluate(xPath, doc, 
-                XPathConstants.NODE);
-            if (LOG.isDebugEnabled())
-                {
-                LOG.debug("Found node: "+node.getNodeName());
-                }
-            if (node == null)
-                {
-                LOG.warn("Could not find xPath: "+xPath);
-                return;
-                }
-            node.replaceChild(textNode, node.getFirstChild());
+        try {
+            final Node node = (Node) s_path.evaluate(xPath, doc,
+                    XPathConstants.NODE);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Found node: " + node.getNodeName());
             }
-        catch (final XPathExpressionException e)
-            {
-            LOG.error("Bad XPath: "+xPath, e);
-            } 
+            if (node == null) {
+                LOG.warn("Could not find xPath: " + xPath);
+                return;
+            }
+            node.replaceChild(textNode, node.getFirstChild());
+        } catch (final XPathExpressionException e) {
+            LOG.error("Bad XPath: " + xPath, e);
         }
+    }
 
     /**
      * Prints the XML {@link Document} to standard out with handy indentation.
      * 
      * @param doc The {@link Document} to print.
      */
-    public static void printDoc(final Document doc)
-        {
-        try
-            {
-            final Transformer trans = 
-                TransformerFactory.newInstance().newTransformer();
+    public static void printDoc(final Document doc) {
+        try {
+            final Transformer trans = TransformerFactory.newInstance()
+                    .newTransformer();
             trans.setOutputProperty(OutputKeys.INDENT, "yes");
             trans.transform(new DOMSource(doc), new StreamResult(System.out));
-            }
-        catch (final TransformerConfigurationException e)
-            {
+        } catch (final TransformerConfigurationException e) {
             LOG.error("Could not configure transformer", e);
-            }
-        catch (final TransformerFactoryConfigurationError e)
-            {
+        } catch (final TransformerFactoryConfigurationError e) {
             LOG.error("Could not configure transformer factory", e);
-            }
-        catch (final TransformerException e)
-            {
+        } catch (final TransformerException e) {
             LOG.error("Error running transformation", e);
-            }
         }
+    }
     
     /**
      * Returns the XML {@link Document} as a readable string.
@@ -113,98 +98,73 @@ public final class XmlUtils
      * @param doc The {@link Document} to convert to a string.
      * @return The returned {@link String}.
      */
-    public static String toString(final Document doc)
-        {
-        try
-            {
-            final Transformer trans = 
-                TransformerFactory.newInstance().newTransformer();
+    public static String toString(final Document doc) {
+        try {
+            final Transformer trans = TransformerFactory.newInstance()
+                    .newTransformer();
             trans.setOutputProperty(OutputKeys.INDENT, "yes");
             final StringWriter sw = new StringWriter();
             trans.transform(new DOMSource(doc), new StreamResult(sw));
             return sw.toString();
-            }
-        catch (final TransformerConfigurationException e)
-            {
+        } catch (final TransformerConfigurationException e) {
             LOG.error("Could not configure transformer", e);
-            }
-        catch (final TransformerFactoryConfigurationError e)
-            {
+        } catch (final TransformerFactoryConfigurationError e) {
             LOG.error("Could not configure transformer factory", e);
-            }
-        catch (final TransformerException e)
-            {
+        } catch (final TransformerException e) {
             LOG.error("Error running transformation", e);
-            }
-        return StringUtils.EMPTY;
         }
-    
+        return StringUtils.EMPTY;
+    }
+
     /**
      * Empty list of XML nodes.
      */
-    public static final NodeList EMPTY_NODE_LIST = new NodeList()
-        {
-        public Node item(final int index)
-            {
+    public static final NodeList EMPTY_NODE_LIST = new NodeList() {
+        public Node item(final int index) {
             return null;
-            }
+        }
 
-        public int getLength()
-            {
+        public int getLength() {
             return 0;
-            }
-        };
+        }
+    };
 
-    public static Document toDoc(final String str) throws IOException, 
-        SAXException
-        {
+    public static Document toDoc(final String str) throws IOException,
+            SAXException {
         final DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         final DocumentBuilder db;
-        try
-            {
+        try {
             db = dbf.newDocumentBuilder();
-            }
-        catch (final ParserConfigurationException e)
-            {
+        } catch (final ParserConfigurationException e) {
             // This should never happen.
             LOG.error("Parser error?", e);
             throw new IoExceptionWithCause("Parser error??", e);
-            }
+        }
         return db.parse(new InputSource(new StringReader(str)));
-        }
+    }
 
-    public static Document toDoc(final InputStream is) throws IOException, 
-        SAXException
-        {
+    public static Document toDoc(final InputStream is) throws IOException,
+            SAXException {
         final DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         final DocumentBuilder db;
-        try
-            {
+        try {
             db = dbf.newDocumentBuilder();
-            }
-        catch (final ParserConfigurationException e)
-            {
+        } catch (final ParserConfigurationException e) {
             // This should never happen.
             LOG.error("Parser error?", e);
             throw new IoExceptionWithCause("Parser error??", e);
-            }
-        return db.parse(is);
         }
+        return db.parse(is);
+    }
 
-    public static void printDoc(final String xml)
-        {
-        try
-            {
+    public static void printDoc(final String xml) {
+        try {
             final Document doc = toDoc(xml);
             printDoc(doc);
-            }
-        catch (IOException e)
-            {
+        } catch (IOException e) {
             LOG.warn("Could not print", e);
-            }
-        catch (SAXException e)
-            {
+        } catch (SAXException e) {
             LOG.warn("Could not print", e);
-            }
         }
     }
+}
