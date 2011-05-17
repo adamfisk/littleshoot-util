@@ -170,6 +170,7 @@ public final class XmlUtils {
         String line;
         while ((line = reader.readLine()) != null) {
             sb.append(line);
+            LOG.info("Read line: "+line);
             if (line.trim().equalsIgnoreCase(endStatementTag)) {
                 return toDoc(sb.toString());
             }
