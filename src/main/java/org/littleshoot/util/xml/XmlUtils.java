@@ -164,6 +164,7 @@ public final class XmlUtils {
     
     public static Document toDoc(final InputStream is, 
         final String endStatementTag) throws IOException, SAXException {
+        LOG.info("Reading stream to XML document");
         final StringBuilder sb = new StringBuilder();
         final BufferedReader reader = 
             new BufferedReader(new InputStreamReader(is));
