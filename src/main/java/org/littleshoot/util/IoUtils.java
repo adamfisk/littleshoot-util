@@ -156,77 +156,59 @@ public final class IoUtils
      * @return The number of bytes copied.
      * @throws IOException If any IO error occurs.
      */
-    public static long copy(final InputStream is, 
-        final RandomAccessFile raf, final long offset, long length,
-        final LongRangeListener lrl, final WriteListener wl) 
-        throws IOException
-        {
-        if (length < 0)
-            {
-            throw new IllegalArgumentException("Invalid byte count: " + 
-                length);
-            }
+    public static long copy(final InputStream is, final RandomAccessFile raf,
+            final long offset, long length, final LongRangeListener lrl,
+            final WriteListener wl) throws IOException {
+        if (length < 0) {
+            throw new IllegalArgumentException("Invalid byte count: " + length);
+        }
         final byte buffer[] = new byte[DEFAULT_BUFFER_SIZE];
         int bytesRead = 0;
         long written = 0;
         long filePosition = offset;
-        try
-            {
-            while (length > 0)
-                {
-                if (length < DEFAULT_BUFFER_SIZE)
-                    {
+        try {
+            while (length > 0) {
+                if (length < DEFAULT_BUFFER_SIZE) {
                     bytesRead = is.read(buffer, 0, (int) length);
-                    }
-                else
-                    {
+                } else {
                     bytesRead = is.read(buffer, 0, DEFAULT_BUFFER_SIZE);
-                    }
+                }
 
-                if (bytesRead == -1)
-                    {
+                if (bytesRead == -1) {
                     break;
-                    }
+                }
 
                 length -= bytesRead;
-                synchronized (raf)
-                    {
+                synchronized (raf) {
                     raf.seek(filePosition);
                     raf.write(buffer, 0, bytesRead);
-                    }
-                if (wl != null)
-                    {
+                }
+                if (wl != null) {
                     wl.onBytesRead(bytesRead);
-                    }
-                if (lrl != null)
-                    {
-                    lrl.onRangeComplete(new LongRange(filePosition, filePosition+bytesRead-1));
-                    }
+                }
+                if (lrl != null) {
+                    lrl.onRangeComplete(new LongRange(filePosition,
+                            filePosition + bytesRead - 1));
+                }
                 filePosition += bytesRead;
                 written += bytesRead;
-                //LOG.debug("IoUtils now written: {}", written);
-                }
-            return written;
+                // LOG.debug("IoUtils now written: {}", written);
             }
-        catch (final IOException e)
-            {
+            return written;
+        } catch (final IOException e) {
             LOG.debug("Got IOException during copy", e);
             throw e;
-            }
-        catch (final RuntimeException e)
-            {
+        } catch (final RuntimeException e) {
             LOG.warn("Runtime error", e);
             throw e;
-            }
         }
+    }
 
-    public static byte[] deflate(final String str)
-        {
+    public static byte[] deflate(final String str) {
         GZIPOutputStream os = null;
         ByteArrayOutputStream baos = null;
         byte[] raw = null;
-        try
-            {
+        try {
             raw = str.getBytes("UTF-8");
             baos = new ByteArrayOutputStream();
             os = new GZIPOutputStream(baos);
@@ -234,80 +216,57 @@ public final class IoUtils
             os.finish();
             baos.close();
             return baos.toByteArray();
-            }
-        catch (final UnsupportedEncodingException e)
-            {
+        } catch (final UnsupportedEncodingException e) {
             // Never.
             LOG.error("Encoding??", e);
             return raw;
-            }
-        catch (final IOException e)
-            {
+        } catch (final IOException e) {
             LOG.error("Could not deflate!!", e);
             return raw;
-            }
-        finally
-            {
+        } finally {
             IOUtils.closeQuietly(os);
             IOUtils.closeQuietly(baos);
-            }
         }
+    }
 
-    public static String inflateString(final byte[] bytes)
-        {
-        try
-            {
+    public static String inflateString(final byte[] bytes) {
+        try {
             return new String(inflate(bytes), "UTF-8");
-            }
-        catch (final UnsupportedEncodingException e)
-            {
+        } catch (final UnsupportedEncodingException e) {
             LOG.error("Encoding??", e);
             return new String(bytes);
-            }
         }
-    
-    public static byte[] inflate(final byte[] bytes)
-        {
-        if (bytes == null)
-            {
+    }
+
+    public static byte[] inflate(final byte[] bytes) {
+        if (bytes == null) {
             throw new IllegalArgumentException("Null bytes argument");
-            }
-        if (bytes.length == 0)
-            {
+        }
+        if (bytes.length == 0) {
             LOG.warn("Received empty byte array!!");
             return bytes;
-            }
+        }
         InputStream bais = null;
         InputStream is = null;
-        try
-            {
+        try {
             bais = new ByteArrayInputStream(bytes);
             is = new GZIPInputStream(bais);
             return IOUtils.toByteArray(is);
-            }
-        catch (final UnsupportedEncodingException e)
-            {
+        } catch (final UnsupportedEncodingException e) {
             // Never.
             LOG.error("Encoding??", e);
             return bytes;
-            }
-        catch (final IOException e)
-            {
-            try
-                {
-                LOG.error("Could not inflate: "+new String(bytes, "UTF-8"), e);
-                }
-            catch (final UnsupportedEncodingException e1)
-                {
+        } catch (final IOException e) {
+            try {
+                LOG.error("Could not inflate: " + new String(bytes, "UTF-8"), e);
+            } catch (final UnsupportedEncodingException e1) {
                 // Never.
                 LOG.error("Encoding??", e);
-                }
-            return bytes;
             }
-        finally
-            {
+            return bytes;
+        } finally {
             IOUtils.closeQuietly(is);
             IOUtils.closeQuietly(bais);
-            }
-        } 
+        }
     }
+}
