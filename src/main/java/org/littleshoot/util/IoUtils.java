@@ -18,8 +18,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Utility functions for IO.
  */
-public final class IoUtils
-    {
+public final class IoUtils {
     
     /**
      * Logger for this class.
@@ -30,6 +29,13 @@ public final class IoUtils
      * The default buffer size to use.
      */
     private static final int DEFAULT_BUFFER_SIZE = 1024 * 4;
+    
+    public static byte[] toByteArray(final InputStream is, final int length) 
+        throws IOException {
+        final ByteArrayOutputStream output = new ByteArrayOutputStream(length);
+        IOUtils.copy(is, output);
+        return output.toByteArray();
+    }
     
     /**
      * Copy bytes from an <code>InputStream</code> to an
@@ -45,29 +51,25 @@ public final class IoUtils
      * @throws NullPointerException if the input or output is <code>null</code>
      * @throws IOException if an I/O error occurs 
      */
-    public static int copy(final InputStream is, final OutputStream os, 
-        final WriteListener listener) throws IOException
-        {
-        if (is == null)
-            {
+    public static int copy(final InputStream is, final OutputStream os,
+            final WriteListener listener) throws IOException {
+        if (is == null) {
             throw new NullPointerException("null input stream.");
-            }
-        if (os == null)
-            {
+        }
+        if (os == null) {
             throw new NullPointerException("null output stream.");
-            }
+        }
         final byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
         int count = 0;
         int n = 0;
-        while (-1 != (n = is.read(buffer))) 
-            {
+        while (-1 != (n = is.read(buffer))) {
             os.write(buffer, 0, n);
             listener.onBytesRead(n);
             count += n;
-            }
-        LOG.trace("Wrote "+count+" bytes.");
-        return count;
         }
+        LOG.trace("Wrote " + count + " bytes.");
+        return count;
+    }
     
     /** 
      * Copies the {@link InputStream} to the specified {@link OutputStream}
@@ -138,12 +140,10 @@ public final class IoUtils
      * @return The number of bytes copied.
      * @throws IOException If any IO error occurs.
      */
-    public static long copy(final InputStream is, 
-        final RandomAccessFile raf, final long offset, long length) 
-        throws IOException
-        {
+    public static long copy(final InputStream is, final RandomAccessFile raf,
+            final long offset, long length) throws IOException {
         return copy(is, raf, offset, length, null, null);
-        }
+    }
     
     /**
      * Copy method for copying data from an {@link InputStream} to a 
