@@ -16,8 +16,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Utility methods for dealing with file locks.
  */
-public class FileLockUtils
-    {
+public class FileLockUtils {
     private static final Logger LOG = 
         LoggerFactory.getLogger(FileLockUtils.class);
     
@@ -30,11 +29,10 @@ public class FileLockUtils
      * @param file The file to obtain a lock on.
      * @param runner The class to call when we have the lock.
      */
-    public static void callWithLock(final File file, 
-        final LockedFileRunner runner)
-        {
+    public static void callWithLock(final File file,
+            final LockedFileRunner runner) {
         callWithLock(file, runner, false);
-        }
+    }
     
     /**
      * Calls the specified {@link Runnable} only when a lock is obtained on
@@ -45,97 +43,67 @@ public class FileLockUtils
      * @param truncate Whether or not to truncate the file when we're done --
      * useful in some file IPC scenarios.
      */
-    public static void callWithLock(final File file, 
-        final LockedFileRunner runner, final boolean truncate)
-        {
+    public static void callWithLock(final File file,
+            final LockedFileRunner runner, final boolean truncate) {
         final RandomAccessFile raf;
-        try
-            {
+        try {
             raf = new RandomAccessFile(file, "rw");
-            }
-        catch (final FileNotFoundException e)
-            {
+        } catch (final FileNotFoundException e) {
             LOG.error("Could not find torrent data file?", e);
             return;
-            }
-        
+        }
+
         final FileChannel fc = raf.getChannel();
         FileLock lock = null;
-        try
-            {
+        try {
             lock = fc.lock();
-            if (!lock.isValid())
-                {
+            if (!lock.isValid()) {
                 LOG.error("Lock not valid?");
-                }
+            }
             runner.callWithLock(fc);
-            }
-        catch (final FileNotFoundException e)
-            {
+        } catch (final FileNotFoundException e) {
             LOG.error("Could not find lock file?", e);
-            }
-        catch (final OverlappingFileLockException e)
-            {
+        } catch (final OverlappingFileLockException e) {
             LOG.debug("Overlapping file lock", e);
-            }
-        catch (final ClosedChannelException e)
-            {
+        } catch (final ClosedChannelException e) {
             LOG.error("Closed channel?", e);
-            }
-        catch (final NonWritableChannelException e)
-            {
+        } catch (final NonWritableChannelException e) {
             LOG.error("Closed channel?", e);
-            }
-        catch (final IOException e)
-            {
+        } catch (final IOException e) {
             LOG.error("IO Error getting lock?", e);
-            }
-        finally 
-            {
-            // If truncate is true, we set the file size to zero to keep it 
-            // from growing forever.  We do this even in the case of errors, as 
+        } finally {
+            // If truncate is true, we set the file size to zero to keep it
+            // from growing forever. We do this even in the case of errors, as
             // it's unlikely we'll successfully process a file later than has
             // produced an error once.
-            if (lock == null)
-                {
+            if (lock == null) {
                 LOG.error("Lock file is null!!");
-                }
-            if (lock != null && truncate)
-                {
-                try
-                    {
+            }
+            if (lock != null && truncate) {
+                try {
                     LOG.debug("Truncating file");
                     fc.truncate(0);
                     LOG.debug("Truncated file");
-                    if (fc.size() != 0L)
-                        {
-                        LOG.error("Truncated file to 0 but size is: "+fc.size());
-                        }
+                    if (fc.size() != 0L) {
+                        LOG.error("Truncated file to 0 but size is: "
+                                + fc.size());
                     }
-                catch (final IOException e)
-                    {
+                } catch (final IOException e) {
                     LOG.warn("Could not truncate the file", e);
-                    }
                 }
-            try
-                {
+            }
+            try {
                 raf.close();
-                }
-            catch (final IOException e)
-                {
+            } catch (final IOException e) {
                 LOG.warn("Could not close RAF", e);
-                }
-            if (lock != null)
-                {
-                try
-                    {
+            }
+            if (lock != null) {
+                try {
                     lock.release();
-                    }
-                catch (final IOException e)
-                    {
+                } catch (final IOException e) {
                     LOG.debug("IOException releasing lock", e);
-                    }
                 }
             }
         }
     }
+}
