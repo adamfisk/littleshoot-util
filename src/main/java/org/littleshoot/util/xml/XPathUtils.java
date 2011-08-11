@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
 
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
@@ -131,6 +133,20 @@ public class XPathUtils  {
             throws XPathExpressionException {
         return (NodeList) this.m_path.evaluate(xPath, this.m_doc,
                 XPathConstants.NODESET);
+    }
+    
+    public Collection<String> getStrings(final String xPath)
+        throws XPathExpressionException {
+        final NodeList nodes = (NodeList) this.m_path.evaluate(xPath, 
+            this.m_doc, XPathConstants.NODESET);
+        final int length = nodes.getLength();
+        final Collection<String> strs = 
+            new ArrayList<String>(length);
+        for (int i = 0; i < length; i++) {
+            final Node node = nodes.item(i);
+            strs.add(node.getTextContent());
+        }
+        return strs;
     }
 
     public URL getUrl(final String xPath) throws MalformedURLException,
