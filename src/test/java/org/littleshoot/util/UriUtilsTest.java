@@ -17,7 +17,7 @@ public class UriUtilsTest
         params.put("appVersion", String.valueOf(0.80));
         
         final String uri =
-            UriUtils.newUrl(ShootConstants.SERVER_BASE, params);
+            UriUtils.newUrl(ShootConstants.SERVER_URL, params);
         
         //final String uri = "http://www.littleshoot.org/?fromSiteListener=true";
         //final Process p = UriUtils.openUri(uri);

@@ -12,12 +12,12 @@ public class ShootConstants {
     /**
      * The base base URL for the server.
      */
-    public static final String SERVER_BASE = "http://" + BASE_DOMAIN;
+    //public static final String SERVER_BASE = "http://" + BASE_DOMAIN;
     
     /**
      * The URL of the server that manages the Little Shoot resource repository.
      */
-    public static final String SERVER_URL = SERVER_BASE; 
+    public static final String SERVER_URL = "http://" + BASE_DOMAIN;
     
     /**
      * URL for the bugs server.
