@@ -3,8 +3,7 @@ package org.littleshoot.util;
 /**
  * App-wide constants.
  */
-public class ShootConstants
-    {
+public class ShootConstants {
     
     public static final String SECURE_SERVER_BASE = "https://littleshoot.org";
 
@@ -44,4 +43,4 @@ public class ShootConstants
     
     public static final String HII = "hii";
     
-    }
+}
