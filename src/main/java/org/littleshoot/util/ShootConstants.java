@@ -10,11 +10,6 @@ public class ShootConstants {
     public static final String BASE_DOMAIN = "www.littleshoot.org";//"localhost:8080";//"littleshootapi.appspot.com"; //"www.littleshoot.org";
     
     /**
-     * The base base URL for the server.
-     */
-    //public static final String SERVER_BASE = "http://" + BASE_DOMAIN;
-    
-    /**
      * The URL of the server that manages the Little Shoot resource repository.
      */
     public static final String SERVER_URL = "http://" + BASE_DOMAIN;
