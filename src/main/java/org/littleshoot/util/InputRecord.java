@@ -50,6 +50,10 @@ public class InputRecord {
      * @param readKey The key to decode data with.
      */
     public InputRecord(final byte[] readKey) {
+        if (readKey == null) {
+            log.error("Read key can't be null!!");
+            throw new NullPointerException("Null read key");
+        }
         this.readKey = readKey;
     }
 
