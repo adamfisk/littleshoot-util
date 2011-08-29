@@ -109,7 +109,8 @@ public class InputRecord {
         } catch (final NoSuchPaddingException e) {
             throw new IllegalArgumentException("No padding?", e);
         } catch (final InvalidKeyException e) {
-            throw new IllegalArgumentException("Bad key?", e);
+            throw new IllegalArgumentException("Bad key? Read key is: "+
+                CommonUtils.toHex(readKey), e);
         } catch (final IllegalBlockSizeException e) {
             throw new IllegalArgumentException("Bad block size?", e);
         } catch (final BadPaddingException e) {
@@ -135,7 +136,8 @@ public class InputRecord {
         if (!Arrays.equals(mac, rawMac)) {
             log.error("MACs don't match!!");
             log.error("Decrypted: "+new String(plain));
-            log.error("Tried to match original:\n"+CommonUtils.toHex(rawMac)+"\n"+CommonUtils.toHex(mac));
+            log.error("Tried to match original:\n"+
+                CommonUtils.toHex(rawMac)+"\n"+CommonUtils.toHex(mac));
             throw new IllegalArgumentException("Macs don't match!!");
         }
         this.plainText = plain;
