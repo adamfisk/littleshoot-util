@@ -12,6 +12,7 @@ import javax.crypto.Mac;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -114,7 +115,7 @@ public class InputRecord {
             throw new IllegalArgumentException("No padding?", e);
         } catch (final InvalidKeyException e) {
             throw new IllegalArgumentException("Bad key? Read key is: "+
-                CommonUtils.toHex(readKey), e);
+                Base64.encodeBase64String(readKey), e);
         } catch (final IllegalBlockSizeException e) {
             throw new IllegalArgumentException("Bad block size?", e);
         } catch (final BadPaddingException e) {

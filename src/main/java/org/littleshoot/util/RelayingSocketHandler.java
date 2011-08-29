@@ -67,7 +67,8 @@ public class RelayingSocketHandler implements SessionSocketListener {
             // In this case the socket will not actually have encrypted data.
             sock = encryptedSocket;
         } else {
-            log.info("Creating new CipherSocket");
+            log.info("Creating CipherSocket with write key {} and read key {}", 
+                    writeKey, readKey);
             sock = new CipherSocket(encryptedSocket, writeKey, readKey);
         }
             
