@@ -11,10 +11,22 @@ import org.junit.Test;
  * Test for the encryption and decryption functions.
  */
 public class EncryptingOutputStreamTest {
-
-    @Test public void testEncoding() throws Exception {
+    
+    @Test public void testEncodingTinyData() throws Exception {
+        runTest(1);
+    }
+    
+    public void testEncodingHugeData() throws Exception {
+        runTest(20000);
+    }
+    
+    @Test public void testEncodingNormalData() throws Exception {
+        runTest(40);
+    }
+    
+    public void runTest(final int size) throws Exception {
         final byte[] key = CommonUtils.generateKey();
-        final byte[] data = buildData();
+        final byte[] data = buildData(size);
 
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
         final EncryptingOutputStream os = new EncryptingOutputStream(key, baos);
@@ -26,10 +38,10 @@ public class EncryptingOutputStreamTest {
             Arrays.equals(data, decrypted));
     }
 
-    private byte[] buildData() {
-        final String base = "geterdone";
+    private byte[] buildData(final int size) {
+        final String base = "ajfi";
         final StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < size; i++) {
             sb.append(base);
         }
         return sb.toString().getBytes();

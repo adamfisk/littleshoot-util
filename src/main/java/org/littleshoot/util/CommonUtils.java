@@ -290,9 +290,11 @@ public class CommonUtils {
     public static byte[] encode(final byte[] key, final byte[] data, 
         final int off, final int len) {
         if (len < SIZE_LIMIT) {
+            //LOG.warn("Encoding single big message!!");
             return encodeSingleMessage(key, data, off, len);
         }
         
+        //LOG.warn("Encoding multiple messages at once");
         final int numArrays = 
             (int) Math.ceil((double)data.length/(double)SIZE_LIMIT);
         final Collection<byte[]> arrays = new ArrayList<byte[]>(numArrays);
@@ -300,7 +302,7 @@ public class CommonUtils {
         int index = 0;
         for (int i = 0; i < numArrays; i++) {
             final int size;
-            final int remaining = data.length -index;
+            final int remaining = data.length - index;
             if (remaining < SIZE_LIMIT) {
                 size = remaining;
             }
@@ -318,7 +320,7 @@ public class CommonUtils {
 
     public static byte[] encodeSingleMessage(final byte[] key, 
         final byte[] data, final int off, final int len) {
-        LOG.info("Original plain byte array length: "+data.length);
+        //LOG.info("Original plain byte array length: "+data.length);
         /*
         0                   1                   2                   3
         0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -335,7 +337,13 @@ public class CommonUtils {
         final SecretKeySpec skeySpec = new SecretKeySpec(key, "AES");
         final Cipher cipher;
         final ByteBuffer dataBuf = ByteBuffer.wrap(data, off, len);
-        final byte[] cipherTextBytes = new byte[len * 2];
+        final int cipherTextLength;
+        if (len > 7) {
+            cipherTextLength = len * 2;
+        } else {
+            cipherTextLength = 16;
+        }
+        final byte[] cipherTextBytes = new byte[cipherTextLength];
         final ByteBuffer cipherText = ByteBuffer.wrap(cipherTextBytes);
         final int written;
         try {
