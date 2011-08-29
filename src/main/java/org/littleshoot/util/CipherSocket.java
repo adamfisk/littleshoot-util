@@ -9,17 +9,30 @@ import java.net.SocketAddress;
 import java.net.SocketException;
 import java.nio.channels.SocketChannel;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Encrypting and decrypting and HMAC verifying socket.
  */
 public class CipherSocket extends Socket {
     
+    private static final Logger LOG = 
+        LoggerFactory.getLogger(CipherSocket.class);
     private final byte[] writeKey;
     private final byte[] readKey;
     private final Socket sock;
 
     public CipherSocket(final Socket sock, final byte[] writeKey, 
         final byte[] readKey) {
+        if (writeKey == null) {
+            LOG.error("Write key can't be null!");
+            throw new NullPointerException("Write key can't be null!");
+        }
+        if (readKey == null) {
+            LOG.error("Read key can't be null!");
+            throw new NullPointerException("Read key can't be null!");
+        }
         this.sock = sock;
         this.writeKey = writeKey;
         this.readKey = readKey;
