@@ -474,7 +474,7 @@ public class CommonUtils {
     }
 
     public static byte[] generateKey() {
-        keyGenerator.init(256);
+        keyGenerator.init(128);
         final SecretKey skey = keyGenerator.generateKey();
         return skey.getEncoded();
     }
