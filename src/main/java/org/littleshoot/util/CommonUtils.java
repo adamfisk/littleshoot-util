@@ -9,7 +9,6 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
-import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -17,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -85,6 +85,7 @@ public class CommonUtils {
     public static void threadedCopy(final InputStream is, final OutputStream os,
         final String threadName) {
         final Runnable runner = new Runnable() {
+            @Override
             public void run() {
                 try {
                     IOUtils.copy(is, os);
@@ -285,16 +286,14 @@ public class CommonUtils {
     }
     
 
-    private static final int SIZE_LIMIT = (int) Math.pow(2, 16);
+    //private static final int SIZE_LIMIT = (int) Math.pow(2, 16);
+    private static final int SIZE_LIMIT = (int) Math.pow(2, 15);
     
     public static byte[] encode(final byte[] key, final byte[] data, 
         final int off, final int len) {
         if (len < SIZE_LIMIT) {
-            //LOG.warn("Encoding single big message!!");
             return encodeSingleMessage(key, data, off, len);
         }
-        
-        //LOG.warn("Encoding multiple messages at once");
         final int numArrays = 
             (int) Math.ceil((double)data.length/(double)SIZE_LIMIT);
         final Collection<byte[]> arrays = new ArrayList<byte[]>(numArrays);
@@ -309,9 +308,7 @@ public class CommonUtils {
             else {
                 size = SIZE_LIMIT;
             }
-            final byte[] array = new byte[size];
-            System.arraycopy(data, index, array, 0, array.length);
-            final byte[] msg = encodeSingleMessage(key, array, index, size);
+            final byte[] msg = encodeSingleMessage(key, data, index, size);
             arrays.add(msg);
             index += size;
         }
@@ -320,7 +317,6 @@ public class CommonUtils {
 
     public static byte[] encodeSingleMessage(final byte[] key, 
         final byte[] data, final int off, final int len) {
-        //LOG.info("Original plain byte array length: "+data.length);
         /*
         0                   1                   2                   3
         0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -366,11 +362,9 @@ public class CommonUtils {
         
         final byte[] version = new byte[] {1};
         
-        //final byte[] intBytes = intToByteArray(cipherText.length);
         final byte[] intBytes = intToByteArray(written);
-        LOG.info("Message length: "+new BigInteger(intBytes));
         final byte[] length = new byte[]{intBytes[2], intBytes[3]};
-
+        
         final Mac mac;
         try {
             mac = Mac.getInstance("hmacSHA256");
@@ -394,43 +388,53 @@ public class CommonUtils {
         return full;
     }
     
-    public static byte[] decode(final byte[] key, final byte[] msg) {
+    public static byte[] decodeAllMessages(final byte[] key, final byte[] msgs){
+        final Collection<byte[]> allDecoded = new ArrayList<byte[]>();
+        final AtomicInteger offset = new AtomicInteger(0);
+        while (offset.get() < msgs.length) {
+            final byte[] decoded = decodeSingleMessage(key, msgs, offset);
+            allDecoded.add(decoded);
+        }
+        return CommonUtils.combine(allDecoded);
+    }
+    
+    public static byte[] decodeSingleMessage(final byte[] key, final byte[] msg) {
+        return decodeSingleMessage(key, msg, new AtomicInteger(0));
+    }
+    
+
+    public static byte[] decodeSingleMessage(final byte[] key, 
+        final byte[] msg, final AtomicInteger atomicOffset) {
         /*
-        0                   1                   2                   3
-        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       |    Version    |         Message Length        |               
-       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       |                                                               |
-       |                        Message (N bytes)                      |
-       |                                                               |
-       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       |                          MAC (N bytes)                        |
-       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       */
-        final byte version = msg[0];
-        
+         0                   1                   2                   3
+         0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+        +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        |    Version    |         Message Length        |               
+        +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        |                                                               |
+        |                        Message (N bytes)                      |
+        |                                                               |
+        +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        |                          MAC (N bytes)                        |
+        +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        */
+        final int offset = atomicOffset.get();
         // This needs to be an int even though it's two bytes because shorts
         // are signed
-        final int size = unsignedShortToInt(new byte[] {msg[1], msg[2]});
-        LOG.info("Size: "+size);
-        
-        final byte[] cipherText = new byte[size];
-        
-        System.arraycopy(msg, 3, cipherText, 0, cipherText.length);
-        
-        final byte[] rawMac = new byte[32];
-        System.arraycopy(msg, 3 + cipherText.length, rawMac, 0, rawMac.length);
+        final int size = 
+            unsignedShortToInt(new byte[] {msg[offset+1], msg[offset+2]});
+        final int newOffset = offset+3+size+32;
+        atomicOffset.set(newOffset);
+        final byte[] rawMac = Arrays.copyOfRange(msg, offset+3+size, newOffset);
         
         final SecretKeySpec skeySpec = new SecretKeySpec(key, "AES");
         final Cipher cipher;
-        final byte[] plainText;
+        final byte[] plainText = new byte[size];
+        final int bytesInOutput;
         try {
             cipher = Cipher.getInstance(DEFAULT_CIPHER);
             cipher.init(Cipher.DECRYPT_MODE, skeySpec);
-            //cipher.update(cipherText, off, len);
-            //plainText = cipher.doFinal();
-            plainText = cipher.doFinal(cipherText);
+            bytesInOutput = cipher.doFinal(msg, offset+3, size, plainText);
         } catch (final NoSuchAlgorithmException e) {
             throw new IllegalArgumentException("No AES?", e);
         } catch (final NoSuchPaddingException e) {
@@ -441,12 +445,9 @@ public class CommonUtils {
             throw new IllegalArgumentException("Bad block size?", e);
         } catch (final BadPaddingException e) {
             throw new IllegalArgumentException("Bad padding?", e);
+        } catch (final ShortBufferException e) {
+            throw new IllegalArgumentException("Buffer too short?", e);
         }
-        
-        final byte[] length = new byte[] {
-            msg[1], 
-            msg[2]
-        };
         
         // Does the mac include the length and the version? Probably.
         final Mac mac256;
@@ -458,9 +459,7 @@ public class CommonUtils {
         } catch (final InvalidKeyException e) {
             throw new IllegalArgumentException("Bad key?", e);
         }
-        mac256.update(version);
-        mac256.update(length);
-        mac256.update(cipherText);
+        mac256.update(msg, offset, 3+size);
         final byte[] mac = mac256.doFinal();
 
         // Now make sure the MACs match.
@@ -468,12 +467,14 @@ public class CommonUtils {
             LOG.error("MACs don't match!!");
             throw new IllegalArgumentException("Macs don't match!!");
         }
+        if (bytesInOutput != plainText.length) {
+            return Arrays.copyOf(plainText, bytesInOutput);
+        }
         return plainText;
     }
 
     public static byte[] generateKey() {
-        // TODO: Switch to 256 or higher.
-        keyGenerator.init(128); 
+        keyGenerator.init(256);
         final SecretKey skey = keyGenerator.generateKey();
         return skey.getEncoded();
     }
@@ -526,4 +527,5 @@ public class CommonUtils {
             (byte)value
         };
     }
+
 }
