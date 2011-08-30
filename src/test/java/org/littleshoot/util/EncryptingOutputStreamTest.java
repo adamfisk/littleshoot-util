@@ -40,7 +40,8 @@ public class EncryptingOutputStreamTest {
         final byte[] allData = CommonUtils.decodeAllMessages(key, encrypted);
         //final byte[] decrypted = CommonUtils.decodeSingleMessage(key, encrypted);
         final String decryptedStr = new String(allData);
-        assertTrue("Decrypted not equal to plain text!!\nOriginal:\n"+new String(data)+"\ndecrypted:\n"+decryptedStr, 
+        assertTrue("Decrypted not equal to plain text!!\nOriginal:\n"+
+            new String(data)+"\ndecrypted:\n"+decryptedStr, 
             Arrays.equals(data, allData));
     }
 
