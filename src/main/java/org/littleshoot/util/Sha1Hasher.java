@@ -53,6 +53,19 @@ public final class Sha1Hasher
     /**
      * Create a new SHA1 hash URI for the specified {@link ByteBuffer}.
      *
+     * @param buf The bytes to create the SHA-1 for.
+     * @return The SHA1 hash as a URI.
+     * @throws IOException If there is an error creating the hash or if the 
+     * specified algorithm cannot be found.
+     */
+    public static URI createSha1Urn(final byte[] buf) throws IOException
+        {
+        return createSha1Urn(ByteBuffer.wrap(buf));
+        }
+    
+    /**
+     * Create a new SHA1 hash URI for the specified {@link ByteBuffer}.
+     *
      * @param buf The {@link ByteBuffer} to create the SHA-1 for.
      * @return The SHA1 hash as a URI.
      * @throws IOException If there is an error creating the hash or if the 
