@@ -9,9 +9,12 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.nio.ByteBuffer;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -63,6 +66,8 @@ public class CommonUtils {
     private static final String DEFAULT_CIPHER = "AES";
     
     private final static KeyGenerator keyGenerator;
+    
+    private static final SecureRandom secureRandom = new SecureRandom();
     
     static {
         try {
@@ -526,6 +531,50 @@ public class CommonUtils {
             (byte)(value >>> 8),
             (byte)value
         };
+    }
+    
+    public static int randomPort() {
+        for (int i = 0; i < 20; i++) {
+            final int randomPort = 
+                1024 + (Math.abs(secureRandom.nextInt() + 1) % 60000);
+            ServerSocket sock = null;
+            try {
+                sock = new ServerSocket();
+                sock.bind(new InetSocketAddress("127.0.0.1", randomPort));
+                final int port = sock.getLocalPort();
+                return port;
+            } catch (final IOException e) {
+                LOG.info("Could not bind to port: {}", randomPort);
+            } finally {
+                if (sock != null) {
+                    try {
+                        sock.close();
+                    } catch (IOException e) {
+                    }
+                }
+            }
+            
+        }
+        
+        // If we can't grab one of our securely chosen random ports, use
+        // whatever port the OS assigns.
+        ServerSocket sock = null;
+        try {
+            sock = new ServerSocket();
+            sock.bind(null);
+            final int port = sock.getLocalPort();
+            return port;
+        } catch (final IOException e) {
+            LOG.info("Still could not bind?");
+            return 1024 + (Math.abs(secureRandom.nextInt() + 1) % 60000);
+        } finally {
+            if (sock != null) {
+                try {
+                    sock.close();
+                } catch (IOException e) {
+                }
+            }
+        }
     }
 
 }
