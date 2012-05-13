@@ -6,6 +6,8 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
+import javax.net.ssl.SSLSocket;
+
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +65,9 @@ public class RelayingSocketHandler implements SessionSocketListener {
         log.info("Relaying socket connecting to: {}", this.serverAddress);
         
         final Socket sock;
-        if (readKey == null || writeKey == null) {
+        if (encryptedSocket instanceof SSLSocket) {
+            sock = encryptedSocket;
+        } else if (readKey == null || writeKey == null) {
             // In this case the socket will not actually have encrypted data.
             sock = encryptedSocket;
         } else {
