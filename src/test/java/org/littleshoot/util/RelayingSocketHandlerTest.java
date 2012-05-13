@@ -37,8 +37,11 @@ public class RelayingSocketHandlerTest {
         new InetSocketAddress("127.0.0.1", PORT);
     private final InetSocketAddress serverAddressUdp = 
         new InetSocketAddress("127.0.0.1", PORT+1);
-    private final SocketAddress relayServer = 
+    private final SocketAddress relayServerSsl = 
         new InetSocketAddress("127.0.0.1", RELAY_PORT); 
+    
+    private final SocketAddress relayServerUdp = 
+        new InetSocketAddress("127.0.0.1", RELAY_PORT+1); 
 
     /**
      * Tests SSL sockets as opposed to custom SSL-like stuff.
@@ -51,15 +54,15 @@ public class RelayingSocketHandlerTest {
         byte[] readKey = CommonUtils.generateKey();
         byte[] writeKey = CommonUtils.generateKey();
         
-        startRelayServer(readKey, writeKey, true);
+        startRelayServer(readKey, writeKey, true, relayServerSsl);
         Thread.yield();
         Thread.sleep(400);
         
         //if (true)  return;
         final SSLSocket sock = (SSLSocket) newTlsSocketFactory().createSocket();
         System.out.println("CLIENT: "+Arrays.asList(sock.getEnabledCipherSuites()));
-        Thread.sleep(2000);
-        sock.connect(relayServer, 4000);
+        //Thread.sleep(2000);
+        sock.connect(relayServerSsl, 4000);
         //final CipherSocket cipher = new CipherSocket(sock, writeKey, readKey);
         final OutputStream os = sock.getOutputStream();
         final String msg = "what up my cracka?";
@@ -90,12 +93,12 @@ public class RelayingSocketHandlerTest {
         byte[] readKey = CommonUtils.generateKey();
         byte[] writeKey = CommonUtils.generateKey();
         
-        startRelayServer(readKey, writeKey, false);
+        startRelayServer(readKey, writeKey, false, relayServerUdp);
         Thread.yield();
         Thread.sleep(400);
         
         final Socket sock = new Socket();
-        sock.connect(relayServer, 4000);
+        sock.connect(relayServerUdp, 4000);
         final CipherSocket cipher = new CipherSocket(sock, writeKey, readKey);
         final OutputStream os = cipher.getOutputStream();
         final String msg = "what up my cracka?";
@@ -115,7 +118,7 @@ public class RelayingSocketHandlerTest {
     }
 
     private void startRelayServer(final byte[] readKey, final byte[] writeKey, 
-        final boolean ssl) throws Exception {
+        final boolean ssl, final SocketAddress relayServer) throws Exception {
         final ServerSocket server;
         if (ssl) {
             server = newTlsServerSocketFactory().createServerSocket();
