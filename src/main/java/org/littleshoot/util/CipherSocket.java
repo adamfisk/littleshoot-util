@@ -27,6 +27,7 @@ public class CipherSocket extends Socket {
 
     public CipherSocket(final Socket sock, final byte[] writeKey, 
         final byte[] readKey) {
+        LOG.info("Creating new cipher socket!!");
         if (writeKey == null) {
             LOG.error("Write key can't be null!");
             throw new NullPointerException("Write key can't be null!");

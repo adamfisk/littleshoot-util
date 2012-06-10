@@ -81,7 +81,7 @@ public class RelayingSocketHandler implements SessionSocketListener {
 
         // We set this relatively low because we're accessing a file from the
         // HTTP server and expect the server to be doing most of the sending.
-        relay.setSoTimeout(30 * 1000);
+        relay.setSoTimeout(300 * 1000);
 
         final OutputStream externalOs = sock.getOutputStream();
         final InputStream externalIs = sock.getInputStream();
