@@ -22,6 +22,8 @@ public class CipherSocket extends Socket {
     private final byte[] writeKey;
     private final byte[] readKey;
     private final Socket sock;
+    private int storedTimeout = 0;
+    private final long startTime = System.currentTimeMillis();
 
     public CipherSocket(final Socket sock, final byte[] writeKey, 
         final byte[] readKey) {
@@ -57,6 +59,7 @@ public class CipherSocket extends Socket {
 
     @Override
     public synchronized void close() throws IOException {
+        LOG.info("CLOSING SOCKET!!");
         sock.close();
     }
 
@@ -219,7 +222,8 @@ public class CipherSocket extends Socket {
     }
 
     @Override
-    public synchronized void setSoTimeout(int timeout) throws SocketException {
+    public synchronized void setSoTimeout(final int timeout) throws SocketException {
+        this.storedTimeout = timeout;
         sock.setSoTimeout(timeout);
     }
 
@@ -245,7 +249,9 @@ public class CipherSocket extends Socket {
 
     @Override
     public String toString() {
-        return "CipherSocket [sock=" + sock + "]";
+        return "CipherSocket [sock=" + sock + "]\n" +
+            "SO_TIMEOUT: "+this.storedTimeout+"\n" +
+            "UPTIME: "+(System.currentTimeMillis() - this.startTime)/1000;
     }
 
 }

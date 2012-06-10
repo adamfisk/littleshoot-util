@@ -95,6 +95,7 @@ public class DecryptingInputStream extends InputStream {
 
     @Override
     public void close() throws IOException {
+        LOG.info("CLOSING INPUT STREAM");
         this.inputStream.close();
     }
 

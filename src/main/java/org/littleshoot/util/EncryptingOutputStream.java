@@ -52,6 +52,7 @@ public class EncryptingOutputStream extends OutputStream {
 
     @Override
     public void close() throws IOException {
+        LOG.info("CLOSING OUTPUT STREAM");
         this.os.close();
     }
 
