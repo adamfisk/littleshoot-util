@@ -99,15 +99,15 @@ public class RelayingSocketHandlerTest {
         
         final Socket sock = new Socket();
         sock.connect(relayServerUdp, 4000);
-        final CipherSocket cipher = new CipherSocket(sock, writeKey, readKey);
-        final OutputStream os = cipher.getOutputStream();
+        //final CipherSocket cipher = new CipherSocket(sock, writeKey, readKey);
+        final OutputStream os = sock.getOutputStream();
         final String msg = "what up my cracka?";
         log.info("Original message length: {}", msg.length());
         final byte[] msgBytes = msg.getBytes();
         os.write(msgBytes);
         
         final byte[] readBuf = new byte[100];
-        final InputStream is = cipher.getInputStream();
+        final InputStream is = sock.getInputStream();
         final int read = is.read(readBuf);
         assertEquals(msgBytes.length, read);
         System.out.println("READ "+read);

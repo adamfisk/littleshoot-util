@@ -6,8 +6,6 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
-import javax.net.ssl.SSLSocket;
-
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,9 +31,9 @@ public class RelayingSocketHandler implements SessionSocketListener {
 
     private final InetSocketAddress serverAddress;
 
-    private final byte[] readKey;
+    //private final byte[] readKey;
 
-    private final byte[] writeKey;
+    //private final byte[] writeKey;
  
     /**
      * Creates a new socket handler. Allows a custom port.
@@ -56,14 +54,15 @@ public class RelayingSocketHandler implements SessionSocketListener {
     public RelayingSocketHandler(final InetSocketAddress serverAddress,
         final byte[] readKey, final byte[] writeKey) {
         this.serverAddress = serverAddress;
-        this.readKey = readKey;
-        this.writeKey = writeKey;
+        //this.readKey = readKey;
+        //this.writeKey = writeKey;
     }
 
     public void onSocket(final String id, final Socket encryptedSocket) 
         throws IOException {
         log.info("Relaying socket connecting to: {}", this.serverAddress);
         
+        /*
         final Socket sock;
         if (encryptedSocket instanceof SSLSocket) {
             sock = encryptedSocket;
@@ -75,6 +74,7 @@ public class RelayingSocketHandler implements SessionSocketListener {
                     writeKey, readKey);
             sock = new CipherSocket(encryptedSocket, writeKey, readKey);
         }
+        */
             
         final Socket relay = new Socket();
         relay.connect(this.serverAddress, 30 * 1000);
@@ -83,8 +83,8 @@ public class RelayingSocketHandler implements SessionSocketListener {
         // HTTP server and expect the server to be doing most of the sending.
         relay.setSoTimeout(300 * 1000);
 
-        final OutputStream externalOs = sock.getOutputStream();
-        final InputStream externalIs = sock.getInputStream();
+        final OutputStream externalOs = encryptedSocket.getOutputStream();
+        final InputStream externalIs = encryptedSocket.getInputStream();
         final OutputStream relayOs = relay.getOutputStream();
         final InputStream relayIs = relay.getInputStream();
 
@@ -92,14 +92,13 @@ public class RelayingSocketHandler implements SessionSocketListener {
         // depend on what connection you're taking the perspective of, but
         // it doesn't really matter.
         threadedCopy(externalIs, relayOs, "ReadFromExternal", 
-            SMALL_BUFFER_SIZE, sock, this.readKey);
+            SMALL_BUFFER_SIZE, encryptedSocket);
         threadedCopy(relayIs, externalOs, "WriteToExternal", 
-            LARGE_BUFFER_SIZE, sock, this.writeKey);
+            LARGE_BUFFER_SIZE, encryptedSocket);
     }
 
     private void threadedCopy(final InputStream is, final OutputStream os,
-        final String threadNameId, final int bufferSize, final Socket sock, 
-        final byte[] key) {
+        final String threadNameId, final int bufferSize, final Socket sock) {
         final Runnable runner = new Runnable() {
             public void run() {
                 try {
@@ -120,10 +119,7 @@ public class RelayingSocketHandler implements SessionSocketListener {
                     IOUtils.closeQuietly(os);
                     IOUtils.closeQuietly(is);
                     log.warn("Closing socket...already closed streams...");
-                    try {
-                        sock.close();
-                    } catch (final IOException e) {
-                    }
+                    IOUtils.closeQuietly(sock);
                 }
             }
         };
