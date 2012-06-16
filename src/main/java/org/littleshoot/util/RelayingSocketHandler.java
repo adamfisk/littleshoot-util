@@ -51,8 +51,7 @@ public class RelayingSocketHandler implements SessionSocketListener {
      * 
      * @param port The port to use for connecting locally.
      */
-    public RelayingSocketHandler(final InetSocketAddress serverAddress,
-        final byte[] readKey, final byte[] writeKey) {
+    public RelayingSocketHandler(final InetSocketAddress serverAddress) {
         this.serverAddress = serverAddress;
         //this.readKey = readKey;
         //this.writeKey = writeKey;

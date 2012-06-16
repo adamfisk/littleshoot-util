@@ -51,10 +51,10 @@ public class RelayingSocketHandlerTest {
     @Test 
     public void testRelaySsl() throws Exception {
         startEchoServer(serverAddressSsl);
-        byte[] readKey = CommonUtils.generateKey();
-        byte[] writeKey = CommonUtils.generateKey();
+        //byte[] readKey = CommonUtils.generateKey();
+        //byte[] writeKey = CommonUtils.generateKey();
         
-        startRelayServer(readKey, writeKey, true, relayServerSsl);
+        startRelayServer(true, relayServerSsl);
         Thread.yield();
         Thread.sleep(400);
         
@@ -90,10 +90,10 @@ public class RelayingSocketHandlerTest {
     public void testRelayCipher() throws Exception {
         startEchoServer(serverAddressUdp);
 
-        byte[] readKey = CommonUtils.generateKey();
-        byte[] writeKey = CommonUtils.generateKey();
+        //byte[] readKey = CommonUtils.generateKey();
+        //byte[] writeKey = CommonUtils.generateKey();
         
-        startRelayServer(readKey, writeKey, false, relayServerUdp);
+        startRelayServer(false, relayServerUdp);
         Thread.yield();
         Thread.sleep(400);
         
@@ -117,8 +117,8 @@ public class RelayingSocketHandlerTest {
         assertEquals(msg, received);
     }
 
-    private void startRelayServer(final byte[] readKey, final byte[] writeKey, 
-        final boolean ssl, final SocketAddress relayServer) throws Exception {
+    private void startRelayServer(final boolean ssl, 
+        final SocketAddress relayServer) throws Exception {
         final ServerSocket server;
         if (ssl) {
             server = newTlsServerSocketFactory().createServerSocket();
@@ -146,7 +146,7 @@ public class RelayingSocketHandlerTest {
                         isa = serverAddressUdp;
                     }
                     final RelayingSocketHandler relay = 
-                        new RelayingSocketHandler(isa, writeKey, readKey);
+                        new RelayingSocketHandler(isa);;
                     log.info("Notifying relay of socket");
                     relay.onSocket("testing", sock);
                 } catch (final Exception e) {
