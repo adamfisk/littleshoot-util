@@ -19,4 +19,9 @@ public interface SessionSocketListener {
     void onSocket(String id, Socket sock) throws IOException;
     
 
+    /**
+     * Called when we've lost the connection to the signaling server and 
+     * have reconnected.
+     */
+    void reconnected();
 }
