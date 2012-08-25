@@ -160,4 +160,10 @@ public class RelayingSocketHandler implements SessionSocketListener {
         log.debug("Copied bytes: {}", count);
         return count;
     }
+
+    @Override
+    public void reconnected() {
+        // TODO Auto-generated method stub
+        
+    }
 }
