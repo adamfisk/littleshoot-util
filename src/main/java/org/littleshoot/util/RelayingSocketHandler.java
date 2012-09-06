@@ -117,7 +117,9 @@ public class RelayingSocketHandler implements SessionSocketListener {
                     // Just close everything.
                     IOUtils.closeQuietly(os);
                     IOUtils.closeQuietly(is);
-                    log.warn("Closing socket...already closed streams...");
+                    
+                    // This happens on JVM shutdown, for example.
+                    log.info("Closing socket...already closed streams...");
                     IOUtils.closeQuietly(sock);
                 }
             }
