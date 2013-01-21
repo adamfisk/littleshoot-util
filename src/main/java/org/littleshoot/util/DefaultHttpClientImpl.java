@@ -2,6 +2,7 @@ package org.littleshoot.util;
 
 import java.io.IOException;
 
+import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpConnectionManager;
 import org.apache.commons.httpclient.HttpException;
@@ -19,15 +20,14 @@ import org.slf4j.LoggerFactory;
  * instances for things such as closing the connection.  This also allows the
  * setting of general properties for connections we create.
  */
-public class DefaultHttpClientImpl implements DefaultHttpClient
-    {
+public class DefaultHttpClientImpl implements DefaultHttpClient {
     
     /**
      * Logger for this class.
      */
-    private final Logger m_log = LoggerFactory.getLogger(getClass());
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final HttpClient m_httpClient; 
+    private final HttpClient httpClient; 
     
     /**
      * Creates a new manager using a custom {@link HttpConnectionManager}
@@ -35,64 +35,60 @@ public class DefaultHttpClientImpl implements DefaultHttpClient
      * 
      * @param connectionManager The {@link HttpConnectionManager} to use.
      */
-    public DefaultHttpClientImpl(final HttpConnectionManager connectionManager)
-        {
-        m_httpClient = new HttpClient(connectionManager);
-        this.m_httpClient.getHttpConnectionManager().getParams().setConnectionTimeout(40 * 1000);
-        final HttpClientParams params = this.m_httpClient.getParams();
+    public DefaultHttpClientImpl(final HttpConnectionManager connectionManager) {
+        httpClient = new HttpClient(connectionManager);
+        this.httpClient.getHttpConnectionManager().getParams()
+                .setConnectionTimeout(40 * 1000);
+        final HttpClientParams params = this.httpClient.getParams();
         params.setSoTimeout(60 * 1000);
-        
-        final String versionString = 
-            System.getProperty("org.lastbamboo.client.version", "0.00");
-        params.setParameter("http.useragent", "LittleShoot/"+versionString);
-        }
+
+        final String versionString = System.getProperty(
+                "org.lastbamboo.client.version", "0.00");
+        params.setParameter("http.useragent", "LittleShoot/" + versionString);
+    }
     
     /**
      * Creates a new manager.
      */
-    public DefaultHttpClientImpl()
-        {
+    public DefaultHttpClientImpl() {
         this(new ResettingMultiThreadedHttpConnectionManager());
-        }
+    }
 
-    public HttpMethod get(final String url) throws HttpException, IOException
-        {
+    public HttpMethod get(final String url) throws HttpException, IOException {
         final GetMethod method = new GetMethod(url);
         return execute(method);
-        }
+    }
 
-    public HttpMethod post(final String url) throws HttpException, IOException
-        {
+    public HttpMethod post(final String url) throws HttpException, IOException {
         final PostMethod method = new PostMethod(url);
         return execute(method);
-        }
+    }
 
-    public int executeMethod(final HttpMethod method) throws HttpException, 
-        IOException
-        {
+    public int executeMethod(final HttpMethod method) throws HttpException,
+            IOException {
         execute(method);
         return method.getStatusCode();
-        }
-        
-    private HttpMethod execute(final HttpMethod method) 
-        throws HttpException, IOException
-        {
-        this.m_httpClient.executeMethod(method);
-        return method;
-        }
-
-    public HttpConnectionManager getHttpConnectionManager()
-        {
-        return this.m_httpClient.getHttpConnectionManager();
-        }
-
-    public HttpClientParams getParams()
-        {
-        return this.m_httpClient.getParams();
-        }
-
-    public HttpState getState()
-        {
-        return this.m_httpClient.getState();
-        }
     }
+
+    private HttpMethod execute(final HttpMethod method) throws HttpException,
+            IOException {
+        this.httpClient.executeMethod(method);
+        return method;
+    }
+
+    public HttpConnectionManager getHttpConnectionManager() {
+        return this.httpClient.getHttpConnectionManager();
+    }
+
+    public HttpClientParams getParams() {
+        return this.httpClient.getParams();
+    }
+
+    public HttpState getState() {
+        return this.httpClient.getState();
+    }
+
+    public HostConfiguration getHostConfiguration() {
+        return this.httpClient.getHostConfiguration();
+    }
+}

@@ -2,6 +2,7 @@ package org.littleshoot.util;
 
 import java.io.IOException;
 
+import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.HttpConnectionManager;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpMethod;
@@ -14,8 +15,7 @@ import org.apache.commons.httpclient.params.HttpClientParams;
  * of third party libraries setting global protocol handlers we don't want
  * to use.
  */
-public interface DefaultHttpClient
-    {
+public interface DefaultHttpClient {
     
     HttpMethod get(final String url) throws HttpException, IOException;
     
@@ -29,4 +29,6 @@ public interface DefaultHttpClient
 
     HttpState getState();
 
-    }
+    HostConfiguration getHostConfiguration();
+
+}
