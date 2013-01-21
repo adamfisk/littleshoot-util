@@ -135,7 +135,7 @@ public class RelayingSocketHandlerTest {
                     if (ssl) {
                         System.out.println("SERVER: "+Arrays.asList(((SSLSocket)sock).getEnabledCipherSuites()));
                         final String[] suites = new String[] {
-                            "TLS_DHE_RSA_WITH_AES_256_CBC_SHA"
+                            "TLS_DHE_RSA_WITH_AES_128_CBC_SHA"
                         };
                         ((SSLSocket)sock).setEnabledCipherSuites(suites);
                     }
