@@ -140,7 +140,9 @@ public class CommonUtils {
     public static File getLittleShootDir() {
         final File lsDir = new File(SystemUtils.USER_HOME, ".littleshoot");
         if (!lsDir.isDirectory()) {
-            lsDir.mkdirs();
+            if (!lsDir.mkdirs()) {
+                LOG.error("Could not make .littleshoot directory!");
+            }
         }
         return lsDir;
     }
