@@ -46,4 +46,36 @@ public class BitUtils
         return bytes;
         }
 
+
+    public static int byteArrayToInteger(byte[] b)
+        {
+        return byteArrayToInteger(b, 0);
+        }
+
+    public static int byteArrayToInteger(byte[] b, int offset)
+        {
+        return  (b[0 + offset] << 24) |
+               ((b[1 + offset] & 0xff) << 16) |
+               ((b[2 + offset] & 0xff) << 8) |
+                (b[3 + offset] & 0xff);
+        }
+
+
+    public static long byteArrayToLong(byte[] b)
+        {
+        return byteArrayToLong(b, 0);
+        }
+
+
+    public static long byteArrayToLong(byte[] b, int offset)
+        {
+        return ((b[0 + offset] & 0xffL) << 56)
+             | ((b[1 + offset] & 0xffL) << 48)
+             | ((b[2 + offset] & 0xffL) << 40)
+             | ((b[3 + offset] & 0xffL) << 32)
+             | ((b[4 + offset] & 0xffL) << 24)
+             | ((b[5 + offset] & 0xffL) << 16)
+             | ((b[6 + offset] & 0xffL) << 8)
+             |  (b[7 + offset] & 0xffL);
+        }
     }
