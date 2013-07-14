@@ -10,9 +10,6 @@ import java.io.StringWriter;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
@@ -164,14 +161,14 @@ public final class XmlUtils {
     
     public static Document toDoc(final InputStream is, 
         final String endStatementTag) throws IOException, SAXException {
-        LOG.info("Reading stream to XML document");
+        LOG.debug("Reading stream to XML document");
         final StringBuilder sb = new StringBuilder();
         final BufferedReader reader = 
             new BufferedReader(new InputStreamReader(is));
         String line;
         while ((line = reader.readLine()) != null) {
             sb.append(line);
-            LOG.info("Read line: "+line);
+            LOG.debug("Read line: "+line);
             if (line.trim().endsWith(endStatementTag)) {
                 return toDoc(sb.toString());
             }
